@@ -39,7 +39,7 @@ Future<void> addUser(
   try {
     // Create user in Firebase Auth
     UserCredential userCredential =
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        await ref.read(firebaseAuthProvider).createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
@@ -99,7 +99,7 @@ Future<void> addUser(
 
 Future<void> loginUser(WidgetRef ref, String email, String password) async {
   try {
-    UserCredential userCredential = await FirebaseAuth.instance
+    UserCredential userCredential = await ref.read(firebaseAuthProvider)
         .signInWithEmailAndPassword(email: email, password: password);
 
     if (userCredential.user?.uid != null) {
@@ -149,9 +149,9 @@ Future<void> loginUser(WidgetRef ref, String email, String password) async {
 }
 
 // Password reset function
-Future<void> resetPassword(String email) async {
+Future<void> resetPassword(WidgetRef ref, String email) async {
   try {
-    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+    await ref.read(firebaseAuthProvider).sendPasswordResetEmail(email: email);
   } on FirebaseAuthException catch (e) {
     if (e.code == 'user-not-found') {
       throw Exception('No user found for that email.');

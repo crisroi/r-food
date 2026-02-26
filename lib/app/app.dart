@@ -5,10 +5,13 @@ import 'package:r_foods/screens/customer/customer_signup.dart';
 import 'package:r_foods/screens/customerDashboard.dart';
 import 'package:r_foods/screens/delivery/delivery_partner_signup.dart';
 import 'package:r_foods/screens/login.dart';
+import 'package:r_foods/screens/restaurant/restaurant_dashboard.dart';
 import 'package:r_foods/screens/restaurant/restaurant_signup.dart';
 import 'package:r_foods/screens/role_selection_screen.dart';
 import 'package:r_foods/screens/signup.dart';
 import 'package:r_foods/screens/reset_password.dart';
+
+import '../screens/customer/customer_dashboard.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -74,8 +77,9 @@ class App extends StatelessWidget {
         '/customerSignup': (_) => const CustomerSignup(),
         '/restaurantSignup': (_) => const RestaurantSignup(),
         '/deliveryPartnerSignup': (_) => const DeliveryPartnerSignup(),
-        '/customerDashboard': (_) => const CustomerHomePage(),
-        '/adminDashboard': (_) => const AdminDashboard()
+        '/customerDashboard': (_) => const CustomerDashboard(),
+        '/adminDashboard': (_) => const AdminDashboard(),
+        '/restaurantDashboard': (_) => const RestaurantDashboard(),
         // TODO: Add these routes when implementing the dashboards
         // '/restaurantDashboard': (_) => const RestaurantHomePage(),
         // '/deliveryDashboard': (_) => const DeliveryHomePage(),

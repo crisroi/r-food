@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:r_foods/providers/auth_provider.dart';
 
-class ResetPasswordPage extends StatefulWidget {
+class ResetPasswordPage extends ConsumerStatefulWidget {
   const ResetPasswordPage({super.key});
 
   @override
-  State<ResetPasswordPage> createState() => _ResetPasswordPageState();
+  ConsumerState<ResetPasswordPage> createState() => _ResetPasswordPageState();
 }
 
-class _ResetPasswordPageState extends State<ResetPasswordPage> {
+class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   bool _isLoading = false;
@@ -25,7 +26,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       setState(() => _isLoading = true);
 
       try {
-        await resetPassword(emailController.text.trim());
+        await resetPassword(ref, emailController.text.trim());
         
         if (mounted) {
           setState(() {
@@ -97,7 +98,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           ),
           const SizedBox(height: 15),
           const Text(
-            "Enter your email address and we'll send you a link to reset your password.",
+            "Enter your email address and we\'ll send you a link to reset your password.",
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
