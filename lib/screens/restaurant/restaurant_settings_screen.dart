@@ -233,7 +233,7 @@ class _RestaurantSettingsScreenState
                                       onChanged: (v) =>
                                           setState(() => closeTime = v),
                                       textColor: textColor,
-                                      subtextColor: subtextColor!,
+                                      subtextColor: subtextColor,
                                       borderColor: borderColor,
                                     ),
                                   ],
