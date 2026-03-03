@@ -12,6 +12,7 @@ class UserModel {
   // Restaurant-specific fields
   final String? restaurantName;
   final String? location;
+  final String? restaurantLogoUrl;
   final Map<String, String>? operatingHours;
   final bool? trackQuantity;
   final int? maxMenuItems;
@@ -52,6 +53,7 @@ class UserModel {
     // Restaurant fields
     this.restaurantName,
     this.location,
+    this.restaurantLogoUrl,
     this.operatingHours,
     this.trackQuantity,
     this.maxMenuItems,
@@ -99,12 +101,12 @@ class UserModel {
   // Check if restaurant is currently open based on operating hours
   bool get isCurrentlyOpen {
     if (role != 'restaurant' || operatingHours == null) return false;
-    
+
     final now = DateTime.now();
     final currentTime = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     final openTime = operatingHours!['openTime'] ?? '00:00';
     final closeTime = operatingHours!['closeTime'] ?? '23:59';
-    
+
     return currentTime.compareTo(openTime) >= 0 && currentTime.compareTo(closeTime) <= 0;
   }
 
@@ -122,6 +124,7 @@ class UserModel {
       // Restaurant fields
       restaurantName: data['restaurantName'],
       location: data['location'],
+      restaurantLogoUrl: data['restaurantLogoUrl'],
       operatingHours: data['operatingHours'] != null
           ? Map<String, String>.from(data['operatingHours'])
           : null,
@@ -168,6 +171,7 @@ class UserModel {
     // Restaurant-specific fields
     if (restaurantName != null) data['restaurantName'] = restaurantName;
     if (location != null) data['location'] = location;
+    if (restaurantLogoUrl != null) data['restaurantLogoUrl'] = restaurantLogoUrl;
     if (operatingHours != null) data['operatingHours'] = operatingHours;
     if (trackQuantity != null) data['trackQuantity'] = trackQuantity;
     if (maxMenuItems != null) data['maxMenuItems'] = maxMenuItems;
@@ -213,6 +217,7 @@ class UserModel {
     DateTime? createdAt,
     String? restaurantName,
     String? location,
+    String? restaurantLogoUrl,
     Map<String, String>? operatingHours,
     bool? trackQuantity,
     int? maxMenuItems,
@@ -250,6 +255,7 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       restaurantName: restaurantName ?? this.restaurantName,
       location: location ?? this.location,
+      restaurantLogoUrl: restaurantLogoUrl ?? this.restaurantLogoUrl,
       operatingHours: operatingHours ?? this.operatingHours,
       trackQuantity: trackQuantity ?? this.trackQuantity,
       maxMenuItems: maxMenuItems ?? this.maxMenuItems,

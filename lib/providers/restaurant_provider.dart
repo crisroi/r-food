@@ -1,4 +1,4 @@
-// providers/restaurant_provider.dart (NEW VERSION)
+// providers/restaurant_provider.dart (FIXED)
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,12 +122,23 @@ class RestaurantService {
     String? restaurantName,
     String? location,
     Map<String, String>? operatingHours,
+    String? restaurantLogoUrl,
   }) async {
-    Map<String, dynamic> updates = {};
+    final updates = <String, dynamic>{};
 
-    if (restaurantName != null) updates['restaurantName'] = restaurantName;
-    if (location != null) updates['location'] = location;
-    if (operatingHours != null) updates['operatingHours'] = operatingHours;
+    if (restaurantName != null) {
+      updates['restaurantName'] = restaurantName;
+    }
+    if (location != null) {
+      updates['location'] = location;
+    }
+    if (operatingHours != null) {
+      updates['operatingHours'] = operatingHours;
+    }
+    // This was the missing part!
+    if (restaurantLogoUrl != null) {
+      updates['restaurantLogoUrl'] = restaurantLogoUrl;
+    }
 
     if (updates.isNotEmpty) {
       await _firestore

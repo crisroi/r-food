@@ -31,12 +31,17 @@ class _RestaurantOrdersScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Orders'),
+        title: Text('Orders', style: TextStyle(color: textColor)),
         bottom: TabBar(
           controller: _tabController,
+          labelColor: textColor,
+          unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
           tabs: const [
             Tab(text: 'Pending'),
             Tab(text: 'Active'),
@@ -74,6 +79,10 @@ class _OrdersList extends ConsumerWidget {
             ? ref.watch(restaurantActiveOrdersProvider)
             : ref.watch(restaurantOrdersProvider);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return ordersAsync.when(
       data: (orders) {
         // Filter for history tab
@@ -98,7 +107,7 @@ class _OrdersList extends ConsumerWidget {
                           ? Icons.fastfood
                           : Icons.history,
                   size: 80,
-                  color: Colors.grey,
+                  color: subtextColor,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -107,7 +116,7 @@ class _OrdersList extends ConsumerWidget {
                       : status == 'active'
                           ? 'No active orders'
                           : 'No order history',
-                  style: const TextStyle(fontSize: 18, color: Colors.grey),
+                  style: TextStyle(fontSize: 18, color: subtextColor),
                 ),
               ],
             ),
@@ -173,7 +182,7 @@ class _OrdersList extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) => Center(child: Text('Error: $error', style: TextStyle(color: textColor))),
     );
   }
 }
@@ -186,7 +195,13 @@ class _OrderCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return Card(
+      color: cardColor,
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
@@ -210,6 +225,7 @@ class _OrderCard extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: isCompact ? 16 : 18,
                             fontWeight: FontWeight.bold,
+                            color: textColor,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -217,7 +233,7 @@ class _OrderCard extends ConsumerWidget {
                           '${order.totalItems} items • ₦${order.total.toStringAsFixed(0)}',
                           style: TextStyle(
                             fontSize: isCompact ? 12 : 14,
-                            color: Colors.grey,
+                            color: subtextColor,
                           ),
                         ),
                       ],
@@ -236,7 +252,7 @@ class _OrderCard extends ConsumerWidget {
                         ? Icons.delivery_dining
                         : Icons.shopping_bag,
                     size: isCompact ? 16 : 18,
-                    color: Colors.grey,
+                    color: subtextColor,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -246,7 +262,7 @@ class _OrderCard extends ConsumerWidget {
                           : 'Pickup',
                       style: TextStyle(
                         fontSize: isCompact ? 12 : 14,
-                        color: Colors.grey,
+                        color: subtextColor,
                       ),
                     ),
                   ),
@@ -256,13 +272,13 @@ class _OrderCard extends ConsumerWidget {
               Row(
                 children: [
                   Icon(Icons.access_time,
-                      size: isCompact ? 16 : 18, color: Colors.grey),
+                      size: isCompact ? 16 : 18, color: subtextColor),
                   const SizedBox(width: 8),
                   Text(
                     DateFormat('MMM dd, hh:mm a').format(order.createdAt),
                     style: TextStyle(
                       fontSize: isCompact ? 12 : 14,
-                      color: Colors.grey,
+                      color: subtextColor,
                     ),
                   ),
                 ],
@@ -278,12 +294,12 @@ class _OrderCard extends ConsumerWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: isDark ? Colors.grey[800] : Colors.grey[100],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${item.quantity}x ${item.name}',
-                      style: TextStyle(fontSize: isCompact ? 11 : 12),
+                      style: TextStyle(fontSize: isCompact ? 11 : 12, color: textColor),
                     ),
                   );
                 }).toList(),
@@ -293,7 +309,7 @@ class _OrderCard extends ConsumerWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     '+ ${order.items.length - 3} more',
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    style: TextStyle(fontSize: 11, color: subtextColor),
                   ),
                 ),
 
@@ -322,6 +338,7 @@ class _OrderCard extends ConsumerWidget {
                         label: const Text('Reject'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -407,9 +424,15 @@ class _OrderCard extends ConsumerWidget {
   }
 
   void _showOrderDetails(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -427,12 +450,12 @@ class _OrderCard extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Order Details',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, color: textColor),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -440,24 +463,25 @@ class _OrderCard extends ConsumerWidget {
               const SizedBox(height: 16),
 
               // Customer info
-              _detailRow('Customer', order.customerName),
-              _detailRow('Phone', order.customerPhone),
+              _detailRow('Customer', order.customerName, subtextColor!, textColor),
+              _detailRow('Phone', order.customerPhone, subtextColor, textColor),
               _detailRow('Order Type',
-                  order.orderType == 'delivery' ? 'Delivery' : 'Pickup'),
+                  order.orderType == 'delivery' ? 'Delivery' : 'Pickup', subtextColor, textColor),
               if (order.deliveryLocation != null)
-                _detailRow('Location', order.deliveryLocation!),
-              _detailRow('Status', order.statusDisplayText),
+                _detailRow('Location', order.deliveryLocation!, subtextColor, textColor),
+              _detailRow('Status', order.statusDisplayText, subtextColor, textColor),
               _detailRow(
                 'Order Time',
                 DateFormat('MMM dd, yyyy - hh:mm a').format(order.createdAt),
+                subtextColor, textColor
               ),
 
-              const Divider(height: 32),
+              Divider(height: 32, color: isDark ? Colors.grey[700] : null),
 
               // Items
-              const Text(
+              Text(
                 'Items',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
               ),
               const SizedBox(height: 12),
               ...order.items.map((item) => Padding(
@@ -471,15 +495,15 @@ class _OrderCard extends ConsumerWidget {
                             children: [
                               Text(
                                 '${item.quantity}x ${item.name}',
-                                style: const TextStyle(fontSize: 15),
+                                style: TextStyle(fontSize: 15, color: textColor),
                               ),
                               if (item.notes != null) ...[
                                 const SizedBox(height: 4),
                                 Text(
                                   'Note: ${item.notes}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey,
+                                    color: subtextColor,
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
@@ -489,28 +513,29 @@ class _OrderCard extends ConsumerWidget {
                         ),
                         Text(
                           '₦${item.totalPrice.toStringAsFixed(0)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
+                            color: textColor,
                           ),
                         ),
                       ],
                     ),
                   )),
 
-              const Divider(height: 32),
+              Divider(height: 32, color: isDark ? Colors.grey[700] : null),
 
               // Summary
-              _detailRow('Subtotal', '₦${order.subtotal.toStringAsFixed(0)}'),
+              _detailRow('Subtotal', '₦${order.subtotal.toStringAsFixed(0)}', subtextColor, textColor),
               _detailRow(
-                  'Delivery Fee', '₦${order.deliveryFee.toStringAsFixed(0)}'),
+                  'Delivery Fee', '₦${order.deliveryFee.toStringAsFixed(0)}', subtextColor, textColor),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Total',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
                   ),
                   Text(
                     '₦${order.total.toStringAsFixed(0)}',
@@ -551,6 +576,7 @@ class _OrderCard extends ConsumerWidget {
                         },
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: const Text('Reject Order'),
@@ -585,7 +611,7 @@ class _OrderCard extends ConsumerWidget {
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _detailRow(String label, String value, Color subtextColor, Color textColor) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -595,13 +621,13 @@ class _OrderCard extends ConsumerWidget {
             width: 120,
             child: Text(
               '$label:',
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(color: subtextColor),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: TextStyle(fontWeight: FontWeight.w500, color: textColor),
             ),
           ),
         ],
@@ -658,11 +684,16 @@ class _OrderCard extends ConsumerWidget {
   }
 
   Future<void> _cancelOrder(BuildContext context, WidgetRef ref) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject Order'),
-        content: const Text('Are you sure you want to reject this order?'),
+        backgroundColor: cardColor,
+        title: Text('Reject Order', style: TextStyle(color: textColor)),
+        content: Text('Are you sure you want to reject this order?', style: TextStyle(color: textColor)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

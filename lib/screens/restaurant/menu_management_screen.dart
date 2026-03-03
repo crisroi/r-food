@@ -15,6 +15,10 @@ class MenuManagementScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final menuItemsAsync = ref.watch(myMenuItemsProvider);
     final restaurantAsync = ref.watch(myRestaurantProvider);
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Scaffold(
       body: Center(
@@ -33,18 +37,19 @@ class MenuManagementScreen extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Menu Items',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
+                                color: textColor,
                               ),
                             ),
                             restaurantAsync.when(
                               data: (restaurant) => Text(
                                 '${menuItems.length} / ${restaurant?.maxMenuItems ?? '∞'} items',
-                                style: const TextStyle(
-                                  color: Colors.grey,
+                                style: TextStyle(
+                                  color: subtextColor,
                                   fontSize: 14,
                                 ),
                               ),
@@ -64,24 +69,24 @@ class MenuManagementScreen extends ConsumerWidget {
 
                   // Menu items list
                   if (menuItems.isEmpty)
-                    const Expanded(
+                    Expanded(
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.restaurant_menu,
-                                size: 80, color: Colors.grey),
-                            SizedBox(height: 16),
+                                size: 80, color: subtextColor),
+                            const SizedBox(height: 16),
                             Text(
                               'No menu items yet',
                               style:
-                                  TextStyle(fontSize: 18, color: Colors.grey),
+                                  TextStyle(fontSize: 18, color: subtextColor),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
                               'Add your first menu item to start!',
                               style:
-                                  TextStyle(fontSize: 14, color: Colors.grey),
+                                  TextStyle(fontSize: 14, color: subtextColor),
                             ),
                           ],
                         ),
@@ -127,7 +132,7 @@ class MenuManagementScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(child: Text('Error: $error')),
+            error: (error, stack) => Center(child: Text('Error: $error', style: TextStyle(color: textColor))),
           ),
         ),
       ),
@@ -144,11 +149,16 @@ class MenuManagementScreen extends ConsumerWidget {
 
   Future<void> _deleteMenuItem(
       BuildContext context, WidgetRef ref, MenuItem item) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Menu Item'),
-        content: Text('Are you sure you want to delete "${item.name}"?'),
+        backgroundColor: cardColor,
+        title: Text('Delete Menu Item', style: TextStyle(color: textColor)),
+        content: Text('Are you sure you want to delete "${item.name}"?', style: TextStyle(color: textColor)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -210,7 +220,13 @@ class _MenuItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return Card(
+      color: cardColor,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
@@ -229,8 +245,8 @@ class _MenuItemCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     width: double.infinity,
                     errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.restaurant, size: 60),
+                      color: isDark ? Colors.grey[800] : Colors.grey[200],
+                      child: Icon(Icons.restaurant, size: 60, color: subtextColor),
                     ),
                   ),
                 ),
@@ -296,9 +312,10 @@ class _MenuItemCard extends StatelessWidget {
                 children: [
                   Text(
                     item.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -306,7 +323,7 @@ class _MenuItemCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     item.categoryDisplay,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: subtextColor),
                   ),
                   const Spacer(),
                   Row(
@@ -390,7 +407,14 @@ class _AddEditMenuItemDialogState
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final borderColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
+
     return Dialog(
+      backgroundColor: cardColor,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
         child: SingleChildScrollView(
@@ -403,9 +427,10 @@ class _AddEditMenuItemDialogState
               children: [
                 Text(
                   widget.item == null ? 'Add Menu Item' : 'Edit Menu Item',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -416,7 +441,7 @@ class _AddEditMenuItemDialogState
                   child: Container(
                     height: 200,
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
+                      border: Border.all(color: borderColor),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: imageBytes != null
@@ -436,11 +461,11 @@ class _AddEditMenuItemDialogState
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.add_photo_alternate,
-                                      size: 48, color: Colors.grey[400]),
+                                      size: 48, color: subtextColor),
                                   const SizedBox(height: 8),
                                   Text(
                                     'Tap to add image',
-                                    style: TextStyle(color: Colors.grey[600]),
+                                    style: TextStyle(color: subtextColor),
                                   ),
                                 ],
                               ),
@@ -459,9 +484,12 @@ class _AddEditMenuItemDialogState
                 // Name
                 TextFormField(
                   controller: nameController,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: textColor),
+                  decoration: InputDecoration(
                     labelText: 'Item Name',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: subtextColor),
+                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
                   ),
                   validator: (v) =>
                       v?.isEmpty ?? true ? 'Enter item name' : null,
@@ -471,9 +499,12 @@ class _AddEditMenuItemDialogState
                 // Description
                 TextFormField(
                   controller: descriptionController,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: textColor),
+                  decoration: InputDecoration(
                     labelText: 'Description (Optional)',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: subtextColor),
+                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
                   ),
                   maxLines: 2,
                 ),
@@ -482,9 +513,12 @@ class _AddEditMenuItemDialogState
                 // Price
                 TextFormField(
                   controller: priceController,
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: textColor),
+                  decoration: InputDecoration(
                     labelText: 'Price (₦)',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: subtextColor),
+                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
                   ),
                   keyboardType: TextInputType.number,
                   validator: (v) {
@@ -497,13 +531,17 @@ class _AddEditMenuItemDialogState
 
                 // Category
                 DropdownButtonFormField<String>(
+                  dropdownColor: cardColor,
+                  style: TextStyle(color: textColor),
                   value: selectedCategory,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Category',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: subtextColor),
+                    border: const OutlineInputBorder(),
+                    enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
                   ),
                   items: MenuCategory.mainCategories
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c, style: TextStyle(color: textColor))))
                       .toList(),
                   onChanged: (value) {
                     setState(() {
@@ -518,14 +556,18 @@ class _AddEditMenuItemDialogState
                 // Sub-category
                 if (selectedCategory != null)
                   DropdownButtonFormField<String>(
+                    dropdownColor: cardColor,
+                    style: TextStyle(color: textColor),
                     value: selectedSubCategory,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Sub-Category',
-                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(color: subtextColor),
+                      border: const OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
                     ),
                     items: MenuCategory.getSubCategories(selectedCategory!)
                         .map((c) =>
-                            DropdownMenuItem(value: c, child: Text(c)))
+                            DropdownMenuItem(value: c, child: Text(c, style: TextStyle(color: textColor))))
                         .toList(),
                     onChanged: (value) =>
                         setState(() => selectedSubCategory = value),

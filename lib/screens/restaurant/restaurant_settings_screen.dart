@@ -1,7 +1,11 @@
+// import 'dart:nativewrappers/_internal/vm/lib/typed_data_patch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:r_foods/providers/restaurant_provider.dart';
+import '../../services/cloudinary_service.dart';
+import 'package:flutter/services.dart';
 
 class RestaurantSettingsScreen extends ConsumerStatefulWidget {
   const RestaurantSettingsScreen({super.key});
@@ -21,6 +25,11 @@ class _RestaurantSettingsScreenState
   String? closeTime;
   bool _isLoading = false;
 
+  XFile? logoFile;
+  Uint8List? logoBytes;
+
+  final ImagePicker _picker = ImagePicker();
+
   @override
   void dispose() {
     nameController.dispose();
@@ -31,10 +40,16 @@ class _RestaurantSettingsScreenState
   @override
   Widget build(BuildContext context) {
     final restaurantAsync = ref.watch(myRestaurantProvider);
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final borderColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Restaurant Settings'),
+        title: Text('Restaurant Settings', style: TextStyle(color: textColor)),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -42,8 +57,8 @@ class _RestaurantSettingsScreenState
           child: restaurantAsync.when(
             data: (restaurant) {
               if (restaurant == null) {
-                return const Center(
-                  child: Text('Restaurant not found'),
+                return Center(
+                  child: Text('Restaurant not found', style: TextStyle(color: textColor)),
                 );
               }
 
@@ -63,39 +78,84 @@ class _RestaurantSettingsScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Restaurant Info Section
-                      const Text(
+                      Text(
                         'Restaurant Information',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 16),
                       Card(
+                        color: cardColor,
                         elevation: 2,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               TextFormField(
                                 controller: nameController,
-                                decoration: const InputDecoration(
+                                style: TextStyle(color: textColor),
+                                decoration: InputDecoration(
                                   labelText: 'Restaurant Name',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.restaurant),
+                                  labelStyle: TextStyle(color: subtextColor),
+                                  border: const OutlineInputBorder(),
+                                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
+                                  prefixIcon: Icon(Icons.restaurant, color: subtextColor),
                                 ),
                                 validator: (v) => v?.isEmpty ?? true
                                     ? 'Enter restaurant name'
                                     : null,
                               ),
+                              const SizedBox(height: 24),
+                              Text('Restaurant Logo',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                              const SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: _pickLogo,
+                                child: Container(
+                                  height: 150,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: borderColor),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: logoBytes != null
+                                      ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.memory(logoBytes!, fit: BoxFit.cover),
+                                  )
+                                      : restaurant.restaurantLogoUrl != null
+                                      ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      restaurant.restaurantLogoUrl!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                      : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.add_photo_alternate, size: 48, color: subtextColor),
+                                      const SizedBox(height: 8),
+                                      Text('Tap to add logo (optional)', style: TextStyle(color: subtextColor)),
+                                    ],
+                                  ),
+                                ),
+                              ),
                               const SizedBox(height: 16),
                               TextFormField(
                                 controller: locationController,
-                                decoration: const InputDecoration(
+                                style: TextStyle(color: textColor),
+                                decoration: InputDecoration(
                                   labelText: 'Location (Optional)',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.location_on),
+                                  labelStyle: TextStyle(color: subtextColor),
+                                  border: const OutlineInputBorder(),
+                                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
+                                  prefixIcon: Icon(Icons.location_on, color: subtextColor),
                                   hintText: 'e.g., Student Union, Block A',
+                                  hintStyle: TextStyle(color: subtextColor?.withOpacity(0.5)),
                                 ),
                               ),
                             ],
@@ -105,15 +165,17 @@ class _RestaurantSettingsScreenState
                       const SizedBox(height: 24),
 
                       // Operating Hours Section
-                      const Text(
+                      Text(
                         'Operating Hours',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 16),
                       Card(
+                        color: cardColor,
                         elevation: 2,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
@@ -132,6 +194,9 @@ class _RestaurantSettingsScreenState
                                         value: openTime,
                                         onChanged: (v) =>
                                             setState(() => openTime = v),
+                                        textColor: textColor,
+                                        subtextColor: subtextColor!,
+                                        borderColor: borderColor,
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -141,6 +206,9 @@ class _RestaurantSettingsScreenState
                                         value: closeTime,
                                         onChanged: (v) =>
                                             setState(() => closeTime = v),
+                                        textColor: textColor,
+                                        subtextColor: subtextColor,
+                                        borderColor: borderColor,
                                       ),
                                     ),
                                   ],
@@ -154,6 +222,9 @@ class _RestaurantSettingsScreenState
                                       value: openTime,
                                       onChanged: (v) =>
                                           setState(() => openTime = v),
+                                      textColor: textColor,
+                                      subtextColor: subtextColor!,
+                                      borderColor: borderColor,
                                     ),
                                     const SizedBox(height: 16),
                                     _buildTimePicker(
@@ -161,6 +232,9 @@ class _RestaurantSettingsScreenState
                                       value: closeTime,
                                       onChanged: (v) =>
                                           setState(() => closeTime = v),
+                                      textColor: textColor,
+                                      subtextColor: subtextColor!,
+                                      borderColor: borderColor,
                                     ),
                                   ],
                                 );
@@ -172,15 +246,17 @@ class _RestaurantSettingsScreenState
                       const SizedBox(height: 24),
 
                       // Restaurant Info Card (Read-only)
-                      const Text(
+                      Text(
                         'Account Information',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 16),
                       Card(
+                        color: cardColor,
                         elevation: 2,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
@@ -190,24 +266,32 @@ class _RestaurantSettingsScreenState
                                 'Owner Name',
                                 restaurant.fullName,
                                 Icons.person,
+                                textColor,
+                                subtextColor!,
                               ),
-                              const Divider(height: 24),
+                              Divider(height: 24, color: isDark ? Colors.grey[700] : null),
                               _infoRow(
                                 'Email',
                                 restaurant.email,
                                 Icons.email,
+                                textColor,
+                                subtextColor,
                               ),
-                              const Divider(height: 24),
+                              Divider(height: 24, color: isDark ? Colors.grey[700] : null),
                               _infoRow(
                                 'Phone',
                                 restaurant.phoneNumber,
                                 Icons.phone,
+                                textColor,
+                                subtextColor,
                               ),
-                              const Divider(height: 24),
+                              Divider(height: 24, color: isDark ? Colors.grey[700] : null),
                               _infoRow(
                                 'Max Menu Items',
                                 restaurant.maxMenuItems?.toString() ?? '—',
                                 Icons.restaurant_menu,
+                                textColor,
+                                subtextColor,
                               ),
                             ],
                           ),
@@ -251,7 +335,7 @@ class _RestaurantSettingsScreenState
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(child: Text('Error: $error')),
+            error: (error, stack) => Center(child: Text('Error: $error', style: TextStyle(color: textColor))),
           ),
         ),
       ),
@@ -262,6 +346,9 @@ class _RestaurantSettingsScreenState
     required String label,
     required String? value,
     required Function(String?) onChanged,
+    required Color textColor,
+    required Color subtextColor,
+    required Color borderColor,
   }) {
     return InkWell(
       onTap: () async {
@@ -278,13 +365,15 @@ class _RestaurantSettingsScreenState
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: TextStyle(color: subtextColor),
           border: const OutlineInputBorder(),
-          prefixIcon: const Icon(Icons.access_time),
+          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
+          prefixIcon: Icon(Icons.access_time, color: subtextColor),
         ),
         child: Text(
           value ?? 'Select Time',
           style: TextStyle(
-            color: value == null ? Colors.grey : Colors.black,
+            color: value == null ? subtextColor : textColor,
             fontSize: 16,
           ),
         ),
@@ -292,10 +381,10 @@ class _RestaurantSettingsScreenState
     );
   }
 
-  Widget _infoRow(String label, String value, IconData icon) {
+  Widget _infoRow(String label, String value, IconData icon, Color textColor, Color subtextColor) {
     return Row(
       children: [
-        Icon(icon, color: Colors.grey),
+        Icon(icon, color: subtextColor),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
@@ -303,17 +392,18 @@ class _RestaurantSettingsScreenState
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey,
+                  color: subtextColor,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
+                  color: textColor,
                 ),
               ),
             ],
@@ -342,9 +432,23 @@ class _RestaurantSettingsScreenState
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('Not logged in');
 
+      final currentRestaurant = ref.read(myRestaurantProvider).value;
+      String? logoUrl = currentRestaurant?.restaurantLogoUrl;
+
+      // If a new logo was picked, upload it and update the URL
+      if (logoFile != null && logoBytes != null) {
+        logoUrl = await CloudinaryService().uploadImageFromBytes(
+          bytes: logoBytes!,
+          fileName: logoFile!.name,
+          folder: 'restaurant_logos',
+        );
+      }
+
+      // Pass the correct logoUrl to the update method
       await ref.read(restaurantServiceProvider).updateRestaurantInfo(
             restaurantId: user.uid,
             restaurantName: nameController.text.trim(),
+            restaurantLogoUrl: logoUrl, // Corrected from "url"
             location: locationController.text.trim().isEmpty
                 ? null
                 : locationController.text.trim(),
@@ -376,6 +480,20 @@ class _RestaurantSettingsScreenState
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _pickLogo() async {
+    final XFile? picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (picked != null) {
+      final bytes = await picked.readAsBytes();
+      setState(() {
+        logoFile = picked;
+        logoBytes = bytes;
+      });
     }
   }
 }

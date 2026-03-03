@@ -5,7 +5,7 @@ import 'package:r_foods/providers/restaurant_provider.dart';
 import 'package:r_foods/providers/cart_provider.dart';
 import 'package:r_foods/models/user_model.dart';
 // import 'package:r_foods/models/menu_item_model.dart';
-import 'package:r_foods/screens/customer/restaurant_menu_screen.dart';
+import 'package:r_foods/screens/customer/multi_order_flow_screen.dart';
 import 'package:r_foods/screens/customer/cart_screen.dart';
 import 'package:r_foods/screens/customer/my_orders_screen.dart';
 
@@ -16,18 +16,22 @@ class CustomerDashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final restaurantsAsync = ref.watch(restaurantsProvider);
     final cartItemCount = ref.watch(cartTotalItemsProvider);
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('R-Foods'),
+        title: Text('R-Foods', style: TextStyle(color: textColor)),
         actions: [
           // Cart icon with badge
           Stack(
             alignment: Alignment.center,
             children: [
               IconButton(
-                icon: const Icon(Icons.shopping_cart),
+                icon: Icon(Icons.shopping_cart, color: textColor),
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const CartScreen()),
@@ -61,14 +65,14 @@ class CustomerDashboard extends ConsumerWidget {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.receipt_long),
+            icon: Icon(Icons.receipt_long, color: textColor),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const MyOrdersScreen()),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: textColor),
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               if (context.mounted) {
@@ -82,15 +86,15 @@ class CustomerDashboard extends ConsumerWidget {
         child: restaurantsAsync.when(
           data: (restaurants) {
             if (restaurants.isEmpty) {
-              return const Center(
+              return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.restaurant, size: 80, color: Colors.grey),
-                    SizedBox(height: 16),
+                    Icon(Icons.restaurant, size: 80, color: subtextColor),
+                    const SizedBox(height: 16),
                     Text(
                       'No restaurants available yet',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                      style: TextStyle(fontSize: 18, color: subtextColor),
                     ),
                   ],
                 ),
@@ -107,11 +111,12 @@ class CustomerDashboard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Available Restaurants',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -138,7 +143,7 @@ class CustomerDashboard extends ConsumerWidget {
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Center(
-            child: Text('Error: $error'),
+            child: Text('Error: $error', style: TextStyle(color: textColor)),
           ),
         ),
       ),
@@ -154,21 +159,26 @@ class _RestaurantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOpen = restaurant.isOpen ?? false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Card(
+      color: cardColor,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: isOpen
             ? () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RestaurantMenuScreen(
-                      restaurantId: restaurant.uid,
-                      restaurantName: restaurant.restaurantName ?? 'Restaurant',
-                    ),
-                  ),
-                )
+          context,
+          MaterialPageRoute(
+            builder: (_) => MultiOrderFlowScreen(
+              restaurantId: restaurant.uid,
+              restaurantName: restaurant.restaurantName ?? 'Restaurant',
+            ),
+          ),
+        )
             : null,
         borderRadius: BorderRadius.circular(16),
         child: Stack(
@@ -193,31 +203,32 @@ class _RestaurantCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Restaurant name
                   Text(
                     restaurant.restaurantName ?? 'Restaurant',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Location
                   if (restaurant.location != null) ...[
                     Row(
                       children: [
-                        const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                        Icon(Icons.location_on, size: 16, color: subtextColor),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             restaurant.location!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey,
+                              color: subtextColor,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -227,18 +238,18 @@ class _RestaurantCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                   ],
-                  
+
                   // Operating hours
                   if (restaurant.operatingHours != null) ...[
                     Row(
                       children: [
-                        const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                        Icon(Icons.access_time, size: 16, color: subtextColor),
                         const SizedBox(width: 4),
                         Text(
                           '${restaurant.operatingHours!['openTime']} - ${restaurant.operatingHours!['closeTime']}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey,
+                            color: subtextColor,
                           ),
                         ),
                       ],
@@ -247,7 +258,7 @@ class _RestaurantCard extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Open/Closed badge
             Positioned(
               top: 12,
@@ -279,13 +290,13 @@ class _RestaurantCard extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Closed overlay
             if (!isOpen)
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: isDark ? Colors.black.withOpacity(0.5) : Colors.grey.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),

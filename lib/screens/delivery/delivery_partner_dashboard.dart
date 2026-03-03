@@ -43,11 +43,14 @@ class _DeliveryPartnerDashboardState
   @override
   Widget build(BuildContext context) {
     final activeDeliveriesAsync = ref.watch(activeDeliveriesProvider);
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Delivery Partner'),
+        title: Text('Delivery Partner', style: TextStyle(color: textColor)),
         actions: [
           // Availability toggle
           Row(
@@ -55,7 +58,7 @@ class _DeliveryPartnerDashboardState
               Text(
                 _isAvailable ? 'Available' : 'Offline',
                 style: TextStyle(
-                  color: _isAvailable ? Colors.green : Colors.grey,
+                  color: _isAvailable ? Colors.green : (isDark ? Colors.grey[400] : Colors.grey),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -67,7 +70,7 @@ class _DeliveryPartnerDashboardState
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: textColor),
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               if (context.mounted) {
@@ -150,6 +153,10 @@ class _DeliveryPartnerDashboardState
 
   Widget _buildOverviewTab() {
     final user = FirebaseAuth.instance.currentUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
     
     return Center(
       child: ConstrainedBox(
@@ -168,7 +175,7 @@ class _DeliveryPartnerDashboardState
 
             final data = snapshot.data?.data() as Map<String, dynamic>?;
             if (data == null) {
-              return const Center(child: Text('Profile not found'));
+              return Center(child: Text('Profile not found', style: TextStyle(color: textColor)));
             }
 
             final totalDeliveries = data['totalDeliveries'] ?? 0;
@@ -184,6 +191,7 @@ class _DeliveryPartnerDashboardState
                 children: [
                   // Welcome Card
                   Card(
+                    color: cardColor,
                     elevation: 4,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -198,7 +206,7 @@ class _DeliveryPartnerDashboardState
                                 ? NetworkImage(data['profileImageUrl'])
                                 : null,
                             child: data['profileImageUrl'] == null
-                                ? const Icon(Icons.person, size: 40)
+                                ? Icon(Icons.person, size: 40, color: subtextColor)
                                 : null,
                           ),
                           const SizedBox(width: 16),
@@ -208,15 +216,16 @@ class _DeliveryPartnerDashboardState
                               children: [
                                 Text(
                                   '${data['firstname']} ${data['lastname']}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
+                                    color: textColor,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.star,
                                       color: Colors.orange,
                                       size: 20,
@@ -226,8 +235,8 @@ class _DeliveryPartnerDashboardState
                                       averageRating > 0
                                           ? '${averageRating.toStringAsFixed(1)} ($totalRatings ratings)'
                                           : 'No ratings yet',
-                                      style: const TextStyle(
-                                        color: Colors.grey,
+                                      style: TextStyle(
+                                        color: subtextColor,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -244,10 +253,10 @@ class _DeliveryPartnerDashboardState
                             decoration: BoxDecoration(
                               color: _isAvailable
                                   ? Colors.green.withOpacity(0.1)
-                                  : Colors.grey.withOpacity(0.1),
+                                  : (isDark ? Colors.grey[800]!.withOpacity(0.3) : Colors.grey.withOpacity(0.1)),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: _isAvailable ? Colors.green : Colors.grey,
+                                color: _isAvailable ? Colors.green : (isDark ? Colors.grey[700]! : Colors.grey),
                               ),
                             ),
                             child: Row(
@@ -256,13 +265,13 @@ class _DeliveryPartnerDashboardState
                                 Icon(
                                   _isAvailable ? Icons.check_circle : Icons.cancel,
                                   size: 16,
-                                  color: _isAvailable ? Colors.green : Colors.grey,
+                                  color: _isAvailable ? Colors.green : subtextColor,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   _isAvailable ? 'Available' : 'Offline',
                                   style: TextStyle(
-                                    color: _isAvailable ? Colors.green : Colors.grey,
+                                    color: _isAvailable ? Colors.green : subtextColor,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                   ),
@@ -277,9 +286,9 @@ class _DeliveryPartnerDashboardState
                   const SizedBox(height: 24),
 
                   // Stats Cards
-                  const Text(
+                  Text(
                     'Statistics',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
                   ),
                   const SizedBox(height: 16),
                   LayoutBuilder(
@@ -301,18 +310,27 @@ class _DeliveryPartnerDashboardState
                             totalDeliveries.toString(),
                             Icons.local_shipping,
                             Colors.blue,
+                            cardColor,
+                            textColor,
+                            subtextColor,
                           ),
                           _buildStatCard(
                             'Total Earnings',
                             '₦${totalEarnings.toStringAsFixed(0)}',
                             Icons.payments,
                             Colors.green,
+                            cardColor,
+                            textColor,
+                            subtextColor,
                           ),
                           _buildStatCard(
                             'Wallet Balance',
                             '₦${walletBalance.toStringAsFixed(0)}',
                             Icons.account_balance_wallet,
                             Colors.purple,
+                            cardColor,
+                            textColor,
+                            subtextColor,
                           ),
                           _buildStatCard(
                             'Average Rating',
@@ -321,6 +339,9 @@ class _DeliveryPartnerDashboardState
                                 : '—',
                             Icons.star,
                             Colors.orange,
+                            cardColor,
+                            textColor,
+                            subtextColor,
                           ),
                         ],
                       );
@@ -329,9 +350,9 @@ class _DeliveryPartnerDashboardState
                   const SizedBox(height: 24),
 
                   // Quick Actions
-                  const Text(
+                  Text(
                     'Quick Actions',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
                   ),
                   const SizedBox(height: 16),
                   Wrap(
@@ -384,14 +405,14 @@ class _DeliveryPartnerDashboardState
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.orange),
                       ),
-                      child: Row(
+                      child: const Row(
                         children: [
-                          const Icon(Icons.info_outline, color: Colors.orange),
-                          const SizedBox(width: 12),
+                          Icon(Icons.info_outline, color: Colors.orange),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               'You are currently offline. Turn on availability to start accepting deliveries.',
-                              style: const TextStyle(fontSize: 14),
+                              style: TextStyle(fontSize: 14),
                             ),
                           ),
                         ],
@@ -412,8 +433,12 @@ class _DeliveryPartnerDashboardState
     String value,
     IconData icon,
     Color color,
+    Color cardColor,
+    Color textColor,
+    Color subtextColor,
   ) {
     return Card(
+      color: cardColor,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -432,18 +457,19 @@ class _DeliveryPartnerDashboardState
             const SizedBox(height: 12),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey,
+                color: subtextColor,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
+                color: textColor,
               ),
               textAlign: TextAlign.center,
             ),

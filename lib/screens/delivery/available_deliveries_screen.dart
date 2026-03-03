@@ -12,6 +12,10 @@ class AvailableDeliveriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ordersAsync = ref.watch(availableDeliveryOrdersProvider);
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Scaffold(
       body: Center(
@@ -20,21 +24,21 @@ class AvailableDeliveriesScreen extends ConsumerWidget {
           child: ordersAsync.when(
             data: (orders) {
               if (orders.isEmpty) {
-                return const Center(
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.delivery_dining,
-                          size: 80, color: Colors.grey),
-                      SizedBox(height: 16),
+                          size: 80, color: subtextColor),
+                      const SizedBox(height: 16),
                       Text(
                         'No deliveries available',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                        style: TextStyle(fontSize: 18, color: subtextColor),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         'Check back later for new orders',
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                        style: TextStyle(fontSize: 14, color: subtextColor),
                       ),
                     ],
                   ),
@@ -101,7 +105,7 @@ class AvailableDeliveriesScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(child: Text('Error: $error')),
+            error: (error, stack) => Center(child: Text('Error: $error', style: TextStyle(color: textColor))),
           ),
         ),
       ),
@@ -121,8 +125,14 @@ class _AvailableDeliveryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final deliveryFee = order.deliveryFee;
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Card(
+      color: cardColor,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -143,6 +153,7 @@ class _AvailableDeliveryCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: isCompact ? 18 : 20,
                           fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -152,7 +163,7 @@ class _AvailableDeliveryCard extends ConsumerWidget {
                         '${order.totalItems} items • ₦${order.total.toStringAsFixed(0)}',
                         style: TextStyle(
                           fontSize: isCompact ? 12 : 14,
-                          color: Colors.grey,
+                          color: subtextColor,
                         ),
                       ),
                     ],
@@ -198,6 +209,8 @@ class _AvailableDeliveryCard extends ConsumerWidget {
               'Customer',
               order.customerName,
               isCompact,
+              textColor,
+              subtextColor,
             ),
             const SizedBox(height: 8),
             _buildInfoRow(
@@ -205,6 +218,8 @@ class _AvailableDeliveryCard extends ConsumerWidget {
               'Phone',
               order.customerPhone,
               isCompact,
+              textColor,
+              subtextColor,
             ),
             const SizedBox(height: 8),
             _buildInfoRow(
@@ -212,6 +227,8 @@ class _AvailableDeliveryCard extends ConsumerWidget {
               'Deliver to',
               order.deliveryLocation ?? 'Pickup',
               isCompact,
+              textColor,
+              subtextColor,
             ),
             const SizedBox(height: 8),
             _buildInfoRow(
@@ -219,6 +236,8 @@ class _AvailableDeliveryCard extends ConsumerWidget {
               'Ordered',
               DateFormat('hh:mm a').format(order.createdAt),
               isCompact,
+              textColor,
+              subtextColor,
             ),
             const SizedBox(height: 16),
 
@@ -226,18 +245,18 @@ class _AvailableDeliveryCard extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: isDark ? Colors.grey[800]!.withOpacity(0.5) : Colors.grey[100],
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Order Items',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: subtextColor,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -245,15 +264,15 @@ class _AvailableDeliveryCard extends ConsumerWidget {
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
                           '• ${item.quantity}x ${item.name}',
-                          style: const TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: 13, color: textColor),
                         ),
                       )),
                   if (order.items.length > 3)
                     Text(
                       '+ ${order.items.length - 3} more items',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: subtextColor,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -292,24 +311,24 @@ class _AvailableDeliveryCard extends ConsumerWidget {
   }
 
   Widget _buildInfoRow(
-      IconData icon, String label, String value, bool isCompact) {
+      IconData icon, String label, String value, bool isCompact, Color textColor, Color subtextColor) {
     return Row(
       children: [
-        Icon(icon, size: isCompact ? 18 : 20, color: Colors.grey),
+        Icon(icon, size: isCompact ? 18 : 20, color: subtextColor),
         const SizedBox(width: 12),
         Expanded(
           child: RichText(
             text: TextSpan(
               style: TextStyle(
                 fontSize: isCompact ? 13 : 14,
-                color: Colors.black,
+                color: textColor,
               ),
               children: [
                 TextSpan(
                   text: '$label: ',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey,
+                    color: subtextColor,
                   ),
                 ),
                 TextSpan(
@@ -325,15 +344,20 @@ class _AvailableDeliveryCard extends ConsumerWidget {
   }
 
   Future<void> _acceptDelivery(BuildContext context, WidgetRef ref) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Accept Delivery?'),
+        backgroundColor: cardColor,
+        title: Text('Accept Delivery?', style: TextStyle(color: textColor)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('You will earn:'),
+            Text('You will earn:', style: TextStyle(color: textColor)),
             const SizedBox(height: 8),
             Text(
               '₦${order.deliveryFee.toStringAsFixed(0)}',
@@ -344,8 +368,8 @@ class _AvailableDeliveryCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Deliver to: ${order.deliveryLocation}'),
-            Text('Customer: ${order.customerName}'),
+            Text('Deliver to: ${order.deliveryLocation}', style: TextStyle(color: textColor)),
+            Text('Customer: ${order.customerName}', style: TextStyle(color: textColor)),
           ],
         ),
         actions: [

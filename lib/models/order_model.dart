@@ -1,42 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class OrderItem {
-  final String menuItemId;
-  final String name;
-  final double price;
-  final int quantity;
-  final String? notes;
+import 'individual_order_model.dart';
 
-  OrderItem({
-    required this.menuItemId,
-    required this.name,
-    required this.price,
-    required this.quantity,
-    this.notes,
-  });
-
-  factory OrderItem.fromMap(Map<String, dynamic> map) {
-    return OrderItem(
-      menuItemId: map['menuItemId'] ?? '',
-      name: map['name'] ?? '',
-      price: (map['price'] ?? 0.0).toDouble(),
-      quantity: map['quantity'] ?? 1,
-      notes: map['notes'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'menuItemId': menuItemId,
-      'name': name,
-      'price': price,
-      'quantity': quantity,
-      if (notes != null) 'notes': notes,
-    };
-  }
-
-  double get totalPrice => price * quantity;
-}
+// OrderItem is now imported from individual_order_model.dart
 
 class OrderModel {
   final String id;
@@ -67,6 +33,8 @@ class OrderModel {
   final String? restaurantReview;
   final int? deliveryPartnerRating;
   final String? deliveryPartnerReview;
+  final List<IndividualOrder> individualOrders;
+  final int orderCount;
 
   OrderModel({
     required this.id,
@@ -97,6 +65,8 @@ class OrderModel {
     this.restaurantReview,
     this.deliveryPartnerRating,
     this.deliveryPartnerReview,
+    required this.individualOrders,
+    required this.orderCount,
   });
 
   // Convert from Firestore document
@@ -133,6 +103,11 @@ class OrderModel {
       restaurantReview: data['restaurantReview'],
       deliveryPartnerRating: data['deliveryPartnerRating'],
       deliveryPartnerReview: data['deliveryPartnerReview'],
+      individualOrders: (data['individualOrders'] as List<dynamic>?)
+          ?.map((order) => IndividualOrder.fromMap(order as Map<String, dynamic>))
+          .toList() ??
+          [],
+      orderCount: data['orderCount'] ?? 1,
     );
   }
 
@@ -169,6 +144,8 @@ class OrderModel {
         'deliveryPartnerRating': deliveryPartnerRating,
       if (deliveryPartnerReview != null)
         'deliveryPartnerReview': deliveryPartnerReview,
+      'individualOrders': individualOrders.map((order) => order.toMap()).toList(),
+      'orderCount': orderCount,
     };
   }
 
@@ -202,6 +179,8 @@ class OrderModel {
     String? restaurantReview,
     int? deliveryPartnerRating,
     String? deliveryPartnerReview,
+    List<IndividualOrder>? individualOrders,
+    int? orderCount,
   }) {
     return OrderModel(
       id: id ?? this.id,
@@ -232,6 +211,8 @@ class OrderModel {
       restaurantReview: restaurantReview ?? this.restaurantReview,
       deliveryPartnerRating: deliveryPartnerRating ?? this.deliveryPartnerRating,
       deliveryPartnerReview: deliveryPartnerReview ?? this.deliveryPartnerReview,
+      individualOrders: individualOrders ?? this.individualOrders,
+      orderCount: orderCount ?? this.orderCount,
     );
   }
 
@@ -275,16 +256,16 @@ class OrderModel {
 
   // Helper: Check if delivery partner can be rated
   bool get canRateDeliveryPartner {
-    return isDelivery && 
-           deliveryPartnerId != null && 
-           (status == 'delivered' || status == 'completed') &&
-           deliveryPartnerRating == null;
+    return isDelivery &&
+        deliveryPartnerId != null &&
+        (status == 'delivered' || status == 'completed') &&
+        deliveryPartnerRating == null;
   }
 
   // Helper: Check if restaurant can be rated
   bool get canRateRestaurant {
     return (status == 'delivered' || status == 'completed') &&
-           restaurantRating == null;
+        restaurantRating == null;
   }
 }
 

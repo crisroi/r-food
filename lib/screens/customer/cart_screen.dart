@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:r_foods/providers/cart_provider.dart';
 import 'package:r_foods/providers/auth_provider.dart';
 import 'package:r_foods/models/order_model.dart';
+import 'package:r_foods/models/individual_order_model.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -22,19 +23,25 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
     final subtotal = ref.watch(cartSubtotalProvider);
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final borderColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
 
     if (cart.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Cart')),
-        body: const Center(
+        appBar: AppBar(title: Text('Cart', style: TextStyle(color: textColor))),
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
-              SizedBox(height: 16),
+              Icon(Icons.shopping_cart_outlined, size: 80, color: subtextColor),
+              const SizedBox(height: 16),
               Text(
                 'Your cart is empty',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+                style: TextStyle(fontSize: 18, color: subtextColor),
               ),
             ],
           ),
@@ -47,10 +54,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cart'),
+        title: Text('Cart', style: TextStyle(color: textColor)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_outline),
+            icon: Icon(Icons.delete_outline, color: textColor),
             onPressed: () => _showClearCartDialog(),
           ),
         ],
@@ -63,143 +70,147 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               // Cart items
               Expanded(
                 child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: cart.items.length,
-              itemBuilder: (context, index) {
-                final cartItem = cart.items[index];
-                return _CartItemCard(cartItem: cartItem);
-              },
-            ),
-          ),
-
-          // Order type selection
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              border: Border(
-                top: BorderSide(color: Colors.grey[300]!),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Order Type',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  padding: const EdgeInsets.all(16),
+                  itemCount: cart.items.length,
+                  itemBuilder: (context, index) {
+                    final cartItem = cart.items[index];
+                    return _CartItemCard(cartItem: cartItem);
+                  },
                 ),
-                const SizedBox(height: 8),
-                Row(
+              ),
+
+              // Order type selection
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
+                  border: Border(
+                    top: BorderSide(color: borderColor),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('Pickup'),
-                        subtitle: const Text('Free'),
-                        value: 'pickup',
-                        groupValue: _orderType,
-                        onChanged: (value) =>
-                            setState(() => _orderType = value!),
-                        contentPadding: EdgeInsets.zero,
-                      ),
+                    Text(
+                      'Order Type',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
                     ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: const Text('Delivery'),
-                        subtitle: const Text('₦200'),
-                        value: 'delivery',
-                        groupValue: _orderType,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RadioListTile<String>(
+                            title: Text('Pickup', style: TextStyle(color: textColor)),
+                            subtitle: Text('Free', style: TextStyle(color: subtextColor)),
+                            value: 'pickup',
+                            groupValue: _orderType,
+                            onChanged: (value) =>
+                                setState(() => _orderType = value!),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<String>(
+                            title: Text('Delivery', style: TextStyle(color: textColor)),
+                            subtitle: Text('₦200', style: TextStyle(color: subtextColor)),
+                            value: 'delivery',
+                            groupValue: _orderType,
+                            onChanged: (value) =>
+                                setState(() => _orderType = value!),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Delivery location dropdown
+                    if (_orderType == 'delivery') ...[
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        dropdownColor: cardColor,
+                        value: _selectedLocation,
+                        decoration: InputDecoration(
+                          labelText: 'Delivery Location',
+                          labelStyle: TextStyle(color: subtextColor),
+                          border: const OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
+                          contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        style: TextStyle(color: textColor),
+                        items: DeliveryLocations.allLocations
+                            .map((loc) =>
+                            DropdownMenuItem(value: loc, child: Text(loc, style: TextStyle(color: textColor))))
+                            .toList(),
                         onChanged: (value) =>
-                            setState(() => _orderType = value!),
-                        contentPadding: EdgeInsets.zero,
+                            setState(() => _selectedLocation = value),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // Summary
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark ? Colors.black.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildSummaryRow('Subtotal', subtotal, textColor),
+                    const SizedBox(height: 8),
+                    _buildSummaryRow('Delivery Fee', deliveryFee, textColor),
+                    Divider(height: 24, color: isDark ? Colors.grey[700] : null),
+                    _buildSummaryRow('Total', total, textColor, isBold: true),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isPlacingOrder ? null : _placeOrder,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isPlacingOrder
+                            ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                            : const Text(
+                          'Place Order',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-
-                // Delivery location dropdown
-                if (_orderType == 'delivery') ...[
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: _selectedLocation,
-                    decoration: const InputDecoration(
-                      labelText: 'Delivery Location',
-                      border: OutlineInputBorder(),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    items: DeliveryLocations.allLocations
-                        .map((loc) =>
-                            DropdownMenuItem(value: loc, child: Text(loc)))
-                        .toList(),
-                    onChanged: (value) =>
-                        setState(() => _selectedLocation = value),
-                  ),
-                ],
-              ],
-            ),
+              ),
+            ],
           ),
-
-          // Summary
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildSummaryRow('Subtotal', subtotal),
-                const SizedBox(height: 8),
-                _buildSummaryRow('Delivery Fee', deliveryFee),
-                const Divider(height: 24),
-                _buildSummaryRow('Total', total, isBold: true),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isPlacingOrder ? null : _placeOrder,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _isPlacingOrder
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'Place Order',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
         ),
       ),
     );
   }
 
-  Widget _buildSummaryRow(String label, double amount, {bool isBold = false}) {
+  Widget _buildSummaryRow(String label, double amount, Color textColor, {bool isBold = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -208,6 +219,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           style: TextStyle(
             fontSize: isBold ? 18 : 16,
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: textColor,
           ),
         ),
         Text(
@@ -215,7 +227,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           style: TextStyle(
             fontSize: isBold ? 18 : 16,
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            color: isBold ? Colors.green : null,
+            color: isBold ? Colors.green : textColor,
           ),
         ),
       ],
@@ -223,11 +235,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   }
 
   void _showClearCartDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear Cart'),
-        content: const Text('Are you sure you want to remove all items?'),
+        backgroundColor: cardColor,
+        title: Text('Clear Cart', style: TextStyle(color: textColor)),
+        content: Text('Are you sure you want to remove all items?', style: TextStyle(color: textColor)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -280,13 +297,41 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       // Create order items
       final orderItems = cart.items
           .map((item) => OrderItem(
-                menuItemId: item.menuItem.id,
-                name: item.menuItem.name,
-                price: item.menuItem.price,
-                quantity: item.quantity,
-                notes: item.specialInstructions,
-              ))
+        menuItemId: item.menuItem.id,
+        name: item.menuItem.name,
+        price: item.menuItem.price,
+        quantity: item.quantity,
+        notes: item.specialInstructions,
+      ))
           .toList();
+
+      // Create single individual order (for backward compatibility with old cart system)
+      final individualOrder = IndividualOrder(
+        foodItems: orderItems
+            .where((item) =>
+        cart.items
+            .firstWhere((ci) => ci.menuItem.id == item.menuItemId)
+            .menuItem
+            .category ==
+            'Food')
+            .toList(),
+        drinkItems: orderItems
+            .where((item) =>
+        cart.items
+            .firstWhere((ci) => ci.menuItem.id == item.menuItemId)
+            .menuItem
+            .category ==
+            'Drink')
+            .toList(),
+        dessertItems: orderItems
+            .where((item) =>
+        cart.items
+            .firstWhere((ci) => ci.menuItem.id == item.menuItemId)
+            .menuItem
+            .category ==
+            'Dessert')
+            .toList(),
+      );
 
       // Create order
       final order = OrderModel(
@@ -307,6 +352,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         status: 'pending',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        individualOrders: [individualOrder],
+        orderCount: 1,
       );
 
       // Save to Firestore
@@ -320,14 +367,20 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       if (!mounted) return;
 
       // Show success dialog
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+      final textColor = isDark ? Colors.white : Colors.black;
+
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
-          title: const Text('Order Placed! 🎉'),
-          content: const Text(
+          backgroundColor: cardColor,
+          title: Text('Order Placed! 🎉', style: TextStyle(color: textColor)),
+          content: Text(
             'Your order has been placed successfully.\n\n'
-            'The restaurant will confirm your order soon.',
+                'The restaurant will confirm your order soon.',
+            style: TextStyle(color: textColor),
           ),
           actions: [
             ElevatedButton(
@@ -364,7 +417,14 @@ class _CartItemCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final borderColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
+
     return Card(
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -381,8 +441,8 @@ class _CartItemCard extends ConsumerWidget {
                 errorBuilder: (context, error, stackTrace) => Container(
                   width: 80,
                   height: 80,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.restaurant),
+                  color: isDark ? Colors.grey[800] : Colors.grey[200],
+                  child: Icon(Icons.restaurant, color: subtextColor),
                 ),
               ),
             ),
@@ -395,9 +455,10 @@ class _CartItemCard extends ConsumerWidget {
                 children: [
                   Text(
                     cartItem.menuItem.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -412,9 +473,9 @@ class _CartItemCard extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       cartItem.specialInstructions!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: subtextColor,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -426,13 +487,13 @@ class _CartItemCard extends ConsumerWidget {
             // Quantity controls
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: borderColor),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.add, size: 18),
+                    icon: Icon(Icons.add, size: 18, color: textColor),
                     onPressed: () => ref
                         .read(cartProvider.notifier)
                         .incrementItem(cartItem.menuItem.id),
@@ -444,13 +505,14 @@ class _CartItemCard extends ConsumerWidget {
                   ),
                   Text(
                     cartItem.quantity.toString(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.remove, size: 18),
+                    icon: Icon(Icons.remove, size: 18, color: textColor),
                     onPressed: () => ref
                         .read(cartProvider.notifier)
                         .decrementItem(cartItem.menuItem.id),

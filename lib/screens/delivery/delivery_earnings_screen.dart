@@ -12,6 +12,10 @@ class DeliveryEarningsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = FirebaseAuth.instance.currentUser;
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Scaffold(
       body: Center(
@@ -31,7 +35,7 @@ class DeliveryEarningsScreen extends ConsumerWidget {
 
               final data = snapshot.data?.data() as Map<String, dynamic>?;
               if (data == null) {
-                return const Center(child: Text('Profile not found'));
+                return Center(child: Text('Profile not found', style: TextStyle(color: textColor)));
               }
 
               final totalEarnings = (data['totalEarnings'] ?? 0.0).toDouble();
@@ -44,10 +48,10 @@ class DeliveryEarningsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Earnings Summary
-                    const Text(
+                    Text(
                       'Earnings Summary',
                       style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor),
                     ),
                     const SizedBox(height: 16),
                     LayoutBuilder(
@@ -64,6 +68,7 @@ class DeliveryEarningsScreen extends ConsumerWidget {
                                   '₦${totalEarnings.toStringAsFixed(0)}',
                                   Icons.payments,
                                   Colors.green,
+                                  context,
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -73,6 +78,7 @@ class DeliveryEarningsScreen extends ConsumerWidget {
                                   '₦${walletBalance.toStringAsFixed(0)}',
                                   Icons.account_balance_wallet,
                                   Colors.blue,
+                                  context,
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -82,6 +88,7 @@ class DeliveryEarningsScreen extends ConsumerWidget {
                                   totalDeliveries.toString(),
                                   Icons.local_shipping,
                                   Colors.orange,
+                                  context,
                                 ),
                               ),
                             ],
@@ -95,6 +102,7 @@ class DeliveryEarningsScreen extends ConsumerWidget {
                                 '₦${totalEarnings.toStringAsFixed(0)}',
                                 Icons.payments,
                                 Colors.green,
+                                context,
                               ),
                               const SizedBox(height: 12),
                               _buildEarningsCard(
@@ -102,6 +110,7 @@ class DeliveryEarningsScreen extends ConsumerWidget {
                                 '₦${walletBalance.toStringAsFixed(0)}',
                                 Icons.account_balance_wallet,
                                 Colors.blue,
+                                context,
                               ),
                               const SizedBox(height: 12),
                               _buildEarningsCard(
@@ -109,6 +118,7 @@ class DeliveryEarningsScreen extends ConsumerWidget {
                                 totalDeliveries.toString(),
                                 Icons.local_shipping,
                                 Colors.orange,
+                                context,
                               ),
                             ],
                           );
@@ -121,10 +131,10 @@ class DeliveryEarningsScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Delivery History',
                           style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                              fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
                         ),
                         TextButton.icon(
                           onPressed: () {}, // TODO: Export/Download
@@ -146,8 +156,14 @@ class DeliveryEarningsScreen extends ConsumerWidget {
   }
 
   Widget _buildEarningsCard(
-      String label, String value, IconData icon, Color color) {
+      String label, String value, IconData icon, Color color, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return Card(
+      color: cardColor,
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -165,18 +181,19 @@ class DeliveryEarningsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: subtextColor,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: textColor,
               ),
               textAlign: TextAlign.center,
             ),
@@ -191,6 +208,11 @@ class _DeliveryHistoryList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final deliveriesAsync = ref.watch(deliveryPartnerOrdersProvider);
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return deliveriesAsync.when(
       data: (deliveries) {
@@ -200,16 +222,17 @@ class _DeliveryHistoryList extends ConsumerWidget {
 
         if (completedDeliveries.isEmpty) {
           return Card(
+            color: cardColor,
             child: Padding(
               padding: const EdgeInsets.all(32),
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.history, size: 60, color: Colors.grey[300]),
+                    Icon(Icons.history, size: 60, color: isDark ? Colors.grey[700] : Colors.grey[300]),
                     const SizedBox(height: 16),
                     Text(
                       'No delivery history yet',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: subtextColor),
                     ),
                   ],
                 ),
@@ -223,11 +246,12 @@ class _DeliveryHistoryList extends ConsumerWidget {
             final isWide = constraints.maxWidth > 700;
 
             return Card(
+              color: cardColor,
               child: ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: completedDeliveries.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.grey[700] : null),
                 itemBuilder: (context, index) {
                   final order = completedDeliveries[index];
                   return _DeliveryHistoryItem(
@@ -242,9 +266,10 @@ class _DeliveryHistoryList extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Card(
+        color: cardColor,
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Center(child: Text('Error: $error')),
+          child: Center(child: Text('Error: $error', style: TextStyle(color: textColor))),
         ),
       ),
     );
@@ -262,6 +287,10 @@ class _DeliveryHistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return ListTile(
       contentPadding: EdgeInsets.symmetric(
         horizontal: isWide ? 24 : 16,
@@ -277,20 +306,20 @@ class _DeliveryHistoryItem extends StatelessWidget {
       ),
       title: Text(
         order.restaurantName,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        style: TextStyle(fontWeight: FontWeight.w600, color: textColor),
       ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 4),
-          Text('To: ${order.deliveryLocation}'),
+          Text('To: ${order.deliveryLocation}', style: TextStyle(color: subtextColor)),
           const SizedBox(height: 2),
           Text(
             order.deliveredAt != null
                 ? DateFormat('MMM dd, yyyy - hh:mm a')
                     .format(order.deliveredAt!)
                 : DateFormat('MMM dd, yyyy').format(order.createdAt),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            style: TextStyle(fontSize: 12, color: subtextColor),
           ),
         ],
       ),
@@ -314,7 +343,7 @@ class _DeliveryHistoryItem extends StatelessWidget {
                 const SizedBox(width: 2),
                 Text(
                   order.deliveryPartnerRating.toString(),
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(fontSize: 12, color: textColor),
                 ),
               ],
             ),

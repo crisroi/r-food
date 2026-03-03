@@ -111,9 +111,9 @@ class MenuCategory {
   static const List<String> mainCategories = [food, drink, dessert];
 
   static const Map<String, List<String>> subCategories = {
-    food: ['Rice', 'Swallow', 'Soup', 'Chicken', 'Beef', 'Egg'],
-    drink: ['Water', 'Soft Drinks'],
-    dessert: ['Ice Cream'],
+    food: ['Rice', 'Swallow', 'Soup', 'Meat', 'Egg', 'Pack', 'Others'],
+    drink: ['Water', 'Soft Drinks', 'Others'],
+    dessert: ['Ice Cream', 'Others'],
   };
 
   static List<String> getSubCategories(String mainCategory) {
