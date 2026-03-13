@@ -10,18 +10,18 @@ import 'auth_provider.dart';
 final myOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final firestore = ref.watch(firestoreProvider);
-  
+
   return authState.when(
     data: (user) {
       if (user == null) return const Stream.empty();
-      
+
       return firestore
           .collection('orders')
           .where('customerId', isEqualTo: user.uid)
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map((snapshot) =>
-              snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
+          snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
     },
     loading: () => const Stream.empty(),
     error: (_, __) => const Stream.empty(),
@@ -32,11 +32,11 @@ final myOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
 final myActiveOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final firestore = ref.watch(firestoreProvider);
-  
+
   return authState.when(
     data: (user) {
       if (user == null) return const Stream.empty();
-      
+
       return firestore
           .collection('orders')
           .where('customerId', isEqualTo: user.uid)
@@ -44,7 +44,7 @@ final myActiveOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map((snapshot) =>
-              snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
+          snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
     },
     loading: () => const Stream.empty(),
     error: (_, __) => const Stream.empty(),
@@ -55,18 +55,18 @@ final myActiveOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
 final restaurantOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final firestore = ref.watch(firestoreProvider);
-  
+
   return authState.when(
     data: (user) {
       if (user == null) return const Stream.empty();
-      
+
       return firestore
           .collection('orders')
           .where('restaurantId', isEqualTo: user.uid)
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map((snapshot) =>
-              snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
+          snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
     },
     loading: () => const Stream.empty(),
     error: (_, __) => const Stream.empty(),
@@ -77,11 +77,11 @@ final restaurantOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
 final restaurantPendingOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final firestore = ref.watch(firestoreProvider);
-  
+
   return authState.when(
     data: (user) {
       if (user == null) return const Stream.empty();
-      
+
       return firestore
           .collection('orders')
           .where('restaurantId', isEqualTo: user.uid)
@@ -89,7 +89,7 @@ final restaurantPendingOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
           .orderBy('createdAt', descending: false)
           .snapshots()
           .map((snapshot) =>
-              snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
+          snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
     },
     loading: () => const Stream.empty(),
     error: (_, __) => const Stream.empty(),
@@ -100,11 +100,11 @@ final restaurantPendingOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
 final restaurantActiveOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final firestore = ref.watch(firestoreProvider);
-  
+
   return authState.when(
     data: (user) {
       if (user == null) return const Stream.empty();
-      
+
       return firestore
           .collection('orders')
           .where('restaurantId', isEqualTo: user.uid)
@@ -112,7 +112,7 @@ final restaurantActiveOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
           .orderBy('createdAt', descending: false)
           .snapshots()
           .map((snapshot) =>
-              snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
+          snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
     },
     loading: () => const Stream.empty(),
     error: (_, __) => const Stream.empty(),
@@ -123,18 +123,18 @@ final restaurantActiveOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
 final deliveryPartnerOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final firestore = ref.watch(firestoreProvider);
-  
+
   return authState.when(
     data: (user) {
       if (user == null) return const Stream.empty();
-      
+
       return firestore
           .collection('orders')
           .where('deliveryPartnerId', isEqualTo: user.uid)
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map((snapshot) =>
-              snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
+          snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
     },
     loading: () => const Stream.empty(),
     error: (_, __) => const Stream.empty(),
@@ -142,28 +142,34 @@ final deliveryPartnerOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
 });
 
 // Get available orders for delivery (ready for pickup, no delivery partner assigned)
+// Filter for missing deliveryPartnerId in memory (Firestore isNull doesn't work for missing fields)
 final availableDeliveryOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
   final firestore = ref.watch(firestoreProvider);
-  
+
   return firestore
       .collection('orders')
       .where('status', isEqualTo: 'ready')
-      .where('deliveryPartnerId', isNull: true)
+      .where('orderType', isEqualTo: 'delivery')
       .orderBy('createdAt', descending: false)
       .snapshots()
-      .map((snapshot) =>
-          snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
+      .map((snapshot) {
+    // Filter out orders that already have a delivery partner
+    return snapshot.docs
+        .map((doc) => OrderModel.fromFirestore(doc))
+        .where((order) => order.deliveryPartnerId == null || order.deliveryPartnerId!.isEmpty)
+        .toList();
+  });
 });
 
 // Get active deliveries for delivery partner
 final activeDeliveriesProvider = StreamProvider<List<OrderModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final firestore = ref.watch(firestoreProvider);
-  
+
   return authState.when(
     data: (user) {
       if (user == null) return const Stream.empty();
-      
+
       return firestore
           .collection('orders')
           .where('deliveryPartnerId', isEqualTo: user.uid)
@@ -171,7 +177,7 @@ final activeDeliveriesProvider = StreamProvider<List<OrderModel>>((ref) {
           .orderBy('createdAt', descending: false)
           .snapshots()
           .map((snapshot) =>
-              snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
+          snapshot.docs.map((doc) => OrderModel.fromFirestore(doc)).toList());
     },
     loading: () => const Stream.empty(),
     error: (_, __) => const Stream.empty(),
@@ -181,17 +187,17 @@ final activeDeliveriesProvider = StreamProvider<List<OrderModel>>((ref) {
 // Get a single order by ID
 final orderProvider = StreamProvider.family<OrderModel?, String>((ref, orderId) {
   final firestore = ref.watch(firestoreProvider);
-  
+
   return firestore
       .collection('orders')
       .doc(orderId)
       .snapshots()
       .map((doc) {
-        if (doc.exists) {
-          return OrderModel.fromFirestore(doc);
-        }
-        return null;
-      });
+    if (doc.exists) {
+      return OrderModel.fromFirestore(doc);
+    }
+    return null;
+  });
 });
 
 // ==================== ORDER SERVICES ====================
@@ -217,7 +223,7 @@ class OrderService {
   }) async {
     final orderRef = _firestore.collection('orders').doc(orderId);
     final orderDoc = await orderRef.get();
-    
+
     if (!orderDoc.exists) {
       throw Exception('Order not found');
     }
@@ -304,7 +310,7 @@ class OrderService {
     int cancelledOrders = orders.docs
         .where((doc) => doc.data()['status'] == 'cancelled')
         .length;
-    
+
     double totalRevenue = 0;
     for (var doc in orders.docs) {
       if (doc.data()['status'] == 'delivered') {
@@ -333,7 +339,7 @@ class OrderService {
     int completedDeliveries = orders.docs
         .where((doc) => doc.data()['status'] == 'delivered')
         .length;
-    
+
     double totalEarnings = 0;
     for (var doc in orders.docs) {
       if (doc.data()['status'] == 'delivered') {

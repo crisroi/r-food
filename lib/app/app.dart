@@ -12,6 +12,7 @@ import 'package:r_foods/screens/signup.dart';
 import 'package:r_foods/screens/reset_password.dart';
 
 import '../screens/customer/customer_dashboard.dart';
+import '../screens/delivery/delivery_partner_dashboard.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -80,6 +81,7 @@ class App extends StatelessWidget {
         '/customerDashboard': (_) => const CustomerDashboard(),
         '/adminDashboard': (_) => const AdminDashboard(),
         '/restaurantDashboard': (_) => const RestaurantDashboard(),
+        '/deliveryDashboard': (_) => const DeliveryPartnerDashboard(),
         // TODO: Add these routes when implementing the dashboards
         // '/restaurantDashboard': (_) => const RestaurantHomePage(),
         // '/deliveryDashboard': (_) => const DeliveryHomePage(),

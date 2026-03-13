@@ -312,7 +312,7 @@ class _DeliveryPartnerDashboardState
                             Colors.blue,
                             cardColor,
                             textColor,
-                            subtextColor,
+                            subtextColor!,
                           ),
                           _buildStatCard(
                             'Total Earnings',

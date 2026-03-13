@@ -31,14 +31,17 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 900;
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: Text('Admin Dashboard', style: TextStyle(color: textColor)),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: textColor),
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               if (context.mounted) {
@@ -49,6 +52,8 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
         ],
         bottom: TabBar(
           controller: _tabController,
+          labelColor: textColor,
+          unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
           tabs: const [
             Tab(icon: Icon(Icons.pending_actions), text: 'Pending'),
             Tab(icon: Icon(Icons.check_circle), text: 'Approved'),
@@ -76,6 +81,10 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
   }
 
   Widget _buildApplicationsList(String status) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -85,7 +94,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: textColor)));
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -106,7 +115,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                           ? Icons.check_circle_outline
                           : Icons.cancel_outlined,
                   size: 80,
-                  color: Colors.grey,
+                  color: subtextColor,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -115,7 +124,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                       : status == 'approved'
                           ? 'No approved partners yet'
                           : 'No rejected applications',
-                  style: const TextStyle(fontSize: 18, color: Colors.grey),
+                  style: TextStyle(fontSize: 18, color: subtextColor),
                 ),
               ],
             ),
@@ -136,7 +145,13 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
   }
 
   Widget _buildApplicationCard(UserModel partner, String status) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return Card(
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
       child: InkWell(
@@ -153,11 +168,12 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                   // Profile picture
                   CircleAvatar(
                     radius: 30,
+                    backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
                     backgroundImage: partner.profileImageUrl != null
                         ? NetworkImage(partner.profileImageUrl!)
                         : null,
                     child: partner.profileImageUrl == null
-                        ? const Icon(Icons.person, size: 30)
+                        ? Icon(Icons.person, size: 30, color: subtextColor)
                         : null,
                   ),
                   const SizedBox(width: 16),
@@ -168,16 +184,17 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                       children: [
                         Text(
                           partner.fullName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: textColor,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Student ID: ${partner.studentId}',
-                          style: const TextStyle(
-                            color: Colors.grey,
+                          style: TextStyle(
+                            color: subtextColor,
                             fontSize: 14,
                           ),
                         ),
@@ -188,17 +205,17 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                   _buildStatusBadge(status),
                 ],
               ),
-              const Divider(height: 24),
+              Divider(height: 24, color: isDark ? Colors.grey[700] : null),
               // Details
-              _buildInfoRow(Icons.school, partner.courseOfStudy ?? '—'),
+              _buildInfoRow(Icons.school, partner.courseOfStudy ?? '—', subtextColor!, textColor),
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.calendar_today, partner.year ?? '—'),
+              _buildInfoRow(Icons.calendar_today, partner.year ?? '—', subtextColor, textColor),
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.home, partner.hostelAddress ?? '—'),
+              _buildInfoRow(Icons.home, partner.hostelAddress ?? '—', subtextColor, textColor),
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.phone, partner.phoneNumber),
+              _buildInfoRow(Icons.phone, partner.phoneNumber, subtextColor, textColor),
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.email, partner.email),
+              _buildInfoRow(Icons.email, partner.email, subtextColor, textColor),
 
               // Action buttons for pending applications
               if (status == 'pending') ...[
@@ -236,6 +253,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                         label: const Text('Reject'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
                         ),
                       ),
                     ),
@@ -261,7 +279,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                       Expanded(
                         child: Text(
                           'Reason: ${partner.rejectionReason}',
-                          style: const TextStyle(fontSize: 13),
+                          style: TextStyle(fontSize: 13, color: textColor),
                         ),
                       ),
                     ],
@@ -344,15 +362,15 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(IconData icon, String text, Color subtextColor, Color textColor) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: Colors.grey),
+        Icon(icon, size: 18, color: subtextColor),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 14),
+            style: TextStyle(fontSize: 14, color: textColor),
           ),
         ),
       ],
@@ -365,9 +383,15 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
 
   // Show full application details with documents
   void _showApplicationDetails(UserModel partner) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: cardColor,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
           child: SingleChildScrollView(
@@ -380,31 +404,33 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                   // Header
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         'Application Details',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: Icon(Icons.close, color: textColor),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
                   ),
-                  const Divider(height: 32),
+                  Divider(height: 32, color: isDark ? Colors.grey[700] : null),
 
                   // Profile Picture
                   Center(
                     child: CircleAvatar(
                       radius: 60,
+                      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
                       backgroundImage: partner.profileImageUrl != null
                           ? NetworkImage(partner.profileImageUrl!)
                           : null,
                       child: partner.profileImageUrl == null
-                          ? const Icon(Icons.person, size: 60)
+                          ? Icon(Icons.person, size: 60, color: subtextColor)
                           : null,
                     ),
                   ),
@@ -412,31 +438,31 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
 
                   // Personal Info
                   _detailSection('Personal Information', [
-                    _detailRow('Full Name', partner.fullName),
-                    _detailRow('Email', partner.email),
-                    _detailRow('Phone', partner.phoneNumber),
-                    _detailRow('Student ID', partner.studentId ?? '—'),
-                  ]),
+                    _detailRow('Full Name', partner.fullName, subtextColor!, textColor),
+                    _detailRow('Email', partner.email, subtextColor, textColor),
+                    _detailRow('Phone', partner.phoneNumber, subtextColor, textColor),
+                    _detailRow('Student ID', partner.studentId ?? '—', subtextColor, textColor),
+                  ], textColor),
 
                   // Academic Info
                   _detailSection('Academic Information', [
-                    _detailRow('Course', partner.courseOfStudy ?? '—'),
-                    _detailRow('Year', partner.year ?? '—'),
-                  ]),
+                    _detailRow('Course', partner.courseOfStudy ?? '—', subtextColor, textColor),
+                    _detailRow('Year', partner.year ?? '—', subtextColor, textColor),
+                  ], textColor),
 
                   // Hostel Info
                   _detailSection('Hostel Information', [
-                    _detailRow('Hostel', partner.hostelName ?? '—'),
-                    _detailRow('Type', partner.hostelType ?? '—'),
-                    _detailRow('Block', partner.blockNumber ?? '—'),
-                    _detailRow('Room', partner.roomNumber ?? 'Not provided'),
-                  ]),
+                    _detailRow('Hostel', partner.hostelName ?? '—', subtextColor, textColor),
+                    _detailRow('Type', partner.hostelType ?? '—', subtextColor, textColor),
+                    _detailRow('Block', partner.blockNumber ?? '—', subtextColor, textColor),
+                    _detailRow('Room', partner.roomNumber ?? 'Not provided', subtextColor, textColor),
+                  ], textColor),
 
                   // Documents
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Documents',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
                   ),
                   const SizedBox(height: 12),
 
@@ -445,6 +471,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                     _documentCard(
                       'Student ID Card',
                       partner.idCardImageUrl!,
+                      cardColor, textColor, subtextColor, isDark
                     ),
 
                   // Hostel Allocation
@@ -452,6 +479,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                     _documentCard(
                       'Hostel Allocation',
                       partner.hostelAllocationUrl!,
+                      cardColor, textColor, subtextColor, isDark
                     ),
 
                   // Action buttons
@@ -485,6 +513,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                             label: const Text('Reject'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.red,
+                              side: const BorderSide(color: Colors.red),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                           ),
@@ -501,14 +530,14 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
     );
   }
 
-  Widget _detailSection(String title, List<Widget> children) {
+  Widget _detailSection(String title, List<Widget> children, Color textColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
         Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
         ),
         const SizedBox(height: 12),
         ...children,
@@ -516,7 +545,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _detailRow(String label, String value, Color subtextColor, Color textColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -526,16 +555,16 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
             width: 120,
             child: Text(
               '$label:',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: Colors.grey,
+                color: subtextColor,
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 15),
+              style: TextStyle(fontSize: 15, color: textColor),
             ),
           ),
         ],
@@ -543,8 +572,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
     );
   }
 
-  Widget _documentCard(String title, String imageUrl) {
+  Widget _documentCard(String title, String imageUrl, Color cardColor, Color textColor, Color subtextColor, bool isDark) {
     return Card(
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () => _showFullImage(imageUrl, title),
@@ -560,7 +590,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                   height: 80,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.error, size: 80),
+                      Icon(Icons.error, size: 80, color: subtextColor),
                 ),
               ),
               const SizedBox(width: 16),
@@ -570,23 +600,24 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Tap to view full size',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: subtextColor,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.grey),
+              Icon(Icons.chevron_right, color: subtextColor),
             ],
           ),
         ),
@@ -595,18 +626,24 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
   }
 
   void _showFullImage(String imageUrl, String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: cardColor,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AppBar(
-              title: Text(title),
+              backgroundColor: cardColor,
+              title: Text(title, style: TextStyle(color: textColor)),
               automaticallyImplyLeading: false,
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: Icon(Icons.close, color: textColor),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -617,7 +654,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
                   imageUrl,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) =>
-                      const Center(child: Icon(Icons.error, size: 100)),
+                      Center(child: Icon(Icons.error, size: 100, color: isDark ? Colors.grey[400] : Colors.grey[600])),
                 ),
               ),
             ),
@@ -664,24 +701,35 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard>
   }
 
   void _rejectApplication(UserModel partner) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final borderColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
+
     final reasonController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject Application'),
+        backgroundColor: cardColor,
+        title: Text('Reject Application', style: TextStyle(color: textColor)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Are you sure you want to reject ${partner.fullName}?'),
+            Text('Are you sure you want to reject ${partner.fullName}?', style: TextStyle(color: textColor)),
             const SizedBox(height: 16),
             TextField(
               controller: reasonController,
-              decoration: const InputDecoration(
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
                 labelText: 'Reason for rejection',
+                labelStyle: TextStyle(color: subtextColor),
                 hintText: 'e.g., Invalid ID card, Unclear documents',
-                border: OutlineInputBorder(),
+                hintStyle: TextStyle(color: subtextColor?.withOpacity(0.5)),
+                border: const OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor)),
               ),
               maxLines: 3,
             ),

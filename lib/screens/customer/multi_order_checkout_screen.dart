@@ -37,7 +37,7 @@ class _MultiOrderCheckoutScreenState
 
   @override
   Widget build(BuildContext context) {
-    // Dark Mode Theme Variables
+    // At the beginning of build method, add:
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black;
@@ -54,10 +54,7 @@ class _MultiOrderCheckoutScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text('Review Order', style: TextStyle(color: textColor)),
-        // leading: IconButton(
-        //   icon: Icon(Icons.arrow_back, color: textColor),
-        //   onPressed: () => Navigator.pop(context),
-        // ),
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
@@ -96,9 +93,10 @@ class _MultiOrderCheckoutScreenState
                           padding: const EdgeInsets.all(16),
                           margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.red.withOpacity(isDark ? 0.2 : 0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.red),
+                            border:
+                                Border.all(color: Colors.red.withOpacity(0.5)),
                           ),
                           child: Row(
                             children: [
@@ -118,7 +116,8 @@ class _MultiOrderCheckoutScreenState
                                     const SizedBox(height: 4),
                                     Text(
                                       'Minimum: ₦500 (excluding pack)\nCurrent: ₦${subtotalWithoutPack.toStringAsFixed(0)}\nNeed: ₦${(500 - subtotalWithoutPack).toStringAsFixed(0)} more',
-                                      style: const TextStyle(fontSize: 13, color: Colors.red),
+                                      style: TextStyle(
+                                          fontSize: 13, color: textColor),
                                     ),
                                   ],
                                 ),
@@ -129,7 +128,8 @@ class _MultiOrderCheckoutScreenState
 
                       // Individual orders
                       ...List.generate(widget.orders.length, (index) {
-                        return _buildOrderCard(index, widget.orders[index], cardColor, textColor, subtextColor!, isDark);
+                        return _buildOrderCard(index, widget.orders[index],
+                            cardColor, textColor, subtextColor!, isDark);
                       }),
 
                       const SizedBox(height: 24),
@@ -146,23 +146,30 @@ class _MultiOrderCheckoutScreenState
                       const SizedBox(height: 12),
                       Container(
                         decoration: BoxDecoration(
+                          color: cardColor,
                           border: Border.all(color: borderColor),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
                           children: [
                             RadioListTile<String>(
-                              title: Text('Pickup', style: TextStyle(color: textColor)),
-                              subtitle: Text('Free', style: TextStyle(color: subtextColor)),
+                              title: Text('Pickup',
+                                  style: TextStyle(color: textColor)),
+                              subtitle: Text('Free',
+                                  style: TextStyle(color: subtextColor)),
                               value: 'pickup',
                               groupValue: _orderType,
                               onChanged: (value) =>
                                   setState(() => _orderType = value!),
                             ),
-                            Divider(height: 1, color: isDark ? Colors.grey[700] : null),
+                            Divider(
+                                height: 1,
+                                color: isDark ? Colors.grey[700] : null),
                             RadioListTile<String>(
-                              title: Text('Delivery', style: TextStyle(color: textColor)),
-                              subtitle: Text('₦200', style: TextStyle(color: subtextColor)),
+                              title: Text('Delivery',
+                                  style: TextStyle(color: textColor)),
+                              subtitle: Text('₦200',
+                                  style: TextStyle(color: subtextColor)),
                               value: 'delivery',
                               groupValue: _orderType,
                               onChanged: (value) =>
@@ -182,19 +189,16 @@ class _MultiOrderCheckoutScreenState
                           decoration: InputDecoration(
                             labelText: 'Delivery Location',
                             labelStyle: TextStyle(color: subtextColor),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            border: const OutlineInputBorder(),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: borderColor),
-                            ),
+                                borderSide: BorderSide(color: borderColor)),
                           ),
                           items: DeliveryLocations.allLocations
                               .map((loc) => DropdownMenuItem(
-                            value: loc,
-                            child: Text(loc, style: TextStyle(color: textColor)),
-                          ))
+                                    value: loc,
+                                    child: Text(loc,
+                                        style: TextStyle(color: textColor)),
+                                  ))
                               .toList(),
                           onChanged: (value) =>
                               setState(() => _selectedLocation = value),
@@ -214,7 +218,9 @@ class _MultiOrderCheckoutScreenState
               color: cardColor,
               boxShadow: [
                 BoxShadow(
-                  color: isDark ? Colors.black.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+                  color: isDark
+                      ? Colors.black.withOpacity(0.3)
+                      : Colors.grey.withOpacity(0.2),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -229,8 +235,10 @@ class _MultiOrderCheckoutScreenState
                       _buildSummaryRow('Subtotal', subtotalWithPack, textColor),
                       const SizedBox(height: 8),
                       _buildSummaryRow('Delivery Fee', deliveryFee, textColor),
-                      Divider(height: 24, color: isDark ? Colors.grey[700] : null),
-                      _buildSummaryRow('Total', grandTotal, textColor, isBold: true),
+                      Divider(
+                          height: 24, color: isDark ? Colors.grey[700] : null),
+                      _buildSummaryRow('Total', grandTotal, textColor,
+                          isBold: true),
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
@@ -246,21 +254,21 @@ class _MultiOrderCheckoutScreenState
                           ),
                           child: _isPlacingOrder
                               ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
                               : const Text(
-                            'Place Order',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                                  'Place Order',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
                       ),
                     ],
@@ -274,10 +282,11 @@ class _MultiOrderCheckoutScreenState
     );
   }
 
-  Widget _buildOrderCard(int index, IndividualOrder order, Color cardColor, Color textColor, Color subtextColor, bool isDark) {
+  Widget _buildOrderCard(int index, IndividualOrder order, Color cardColor,
+      Color textColor, Color subtextColor, bool isDark) {
     return Card(
-      color: cardColor,
       margin: const EdgeInsets.only(bottom: 16),
+      color: cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -323,24 +332,29 @@ class _MultiOrderCheckoutScreenState
             if (order.foodItems.isNotEmpty) ...[
               Text(
                 'Food',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: textColor),
               ),
               const SizedBox(height: 8),
               ...order.foodItems.map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text('${item.quantity}x ${item.name}', style: TextStyle(color: textColor)),
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text('${item.quantity}x ${item.name}',
+                              style: TextStyle(color: textColor)),
+                        ),
+                        Text(
+                          '₦${item.totalPrice.toStringAsFixed(0)}',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500, color: textColor),
+                        ),
+                      ],
                     ),
-                    Text(
-                      '₦${item.totalPrice.toStringAsFixed(0)}',
-                      style: TextStyle(fontWeight: FontWeight.w500, color: textColor),
-                    ),
-                  ],
-                ),
-              )),
+                  )),
               const SizedBox(height: 12),
             ],
 
@@ -348,24 +362,29 @@ class _MultiOrderCheckoutScreenState
             if (order.drinkItems.isNotEmpty) ...[
               Text(
                 'Drinks',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: textColor),
               ),
               const SizedBox(height: 8),
               ...order.drinkItems.map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text('${item.quantity}x ${item.name}', style: TextStyle(color: textColor)),
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text('${item.quantity}x ${item.name}',
+                              style: TextStyle(color: textColor)),
+                        ),
+                        Text(
+                          '₦${item.totalPrice.toStringAsFixed(0)}',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500, color: textColor),
+                        ),
+                      ],
                     ),
-                    Text(
-                      '₦${item.totalPrice.toStringAsFixed(0)}',
-                      style: TextStyle(fontWeight: FontWeight.w500, color: textColor),
-                    ),
-                  ],
-                ),
-              )),
+                  )),
               const SizedBox(height: 12),
             ],
 
@@ -373,24 +392,29 @@ class _MultiOrderCheckoutScreenState
             if (order.dessertItems.isNotEmpty) ...[
               Text(
                 'Desserts',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: textColor),
               ),
               const SizedBox(height: 8),
               ...order.dessertItems.map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text('${item.quantity}x ${item.name}', style: TextStyle(color: textColor)),
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text('${item.quantity}x ${item.name}',
+                              style: TextStyle(color: textColor)),
+                        ),
+                        Text(
+                          '₦${item.totalPrice.toStringAsFixed(0)}',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500, color: textColor),
+                        ),
+                      ],
                     ),
-                    Text(
-                      '₦${item.totalPrice.toStringAsFixed(0)}',
-                      style: TextStyle(fontWeight: FontWeight.w500, color: textColor),
-                    ),
-                  ],
-                ),
-              )),
+                  )),
               const SizedBox(height: 12),
             ],
 
@@ -398,7 +422,10 @@ class _MultiOrderCheckoutScreenState
             if (order.packItem != null) ...[
               Text(
                 'Pack',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: textColor),
               ),
               const SizedBox(height: 8),
               Row(
@@ -406,11 +433,13 @@ class _MultiOrderCheckoutScreenState
                 children: [
                   Expanded(
                     child: Text(
-                        '${order.packItem!.quantity}x ${order.packItem!.name}', style: TextStyle(color: textColor)),
+                        '${order.packItem!.quantity}x ${order.packItem!.name}',
+                        style: TextStyle(color: textColor)),
                   ),
                   Text(
                     '₦${order.packItem!.totalPrice.toStringAsFixed(0)}',
-                    style: TextStyle(fontWeight: FontWeight.w500, color: textColor),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500, color: textColor),
                   ),
                 ],
               ),
@@ -424,7 +453,8 @@ class _MultiOrderCheckoutScreenState
               children: [
                 Text(
                   'Order Total',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+                  style:
+                      TextStyle(fontWeight: FontWeight.bold, color: textColor),
                 ),
                 Text(
                   '₦${order.subtotal.toStringAsFixed(0)}',
@@ -442,7 +472,8 @@ class _MultiOrderCheckoutScreenState
     );
   }
 
-  Widget _buildSummaryRow(String label, double amount, Color textColor, {bool isBold = false}) {
+  Widget _buildSummaryRow(String label, double amount, Color textColor,
+      {bool isBold = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -492,7 +523,8 @@ class _MultiOrderCheckoutScreenState
       builder: (context) => AlertDialog(
         backgroundColor: cardColor,
         title: Text('Delete Order', style: TextStyle(color: textColor)),
-        content: Text('Are you sure you want to delete Order ${index + 1}?', style: TextStyle(color: textColor)),
+        content: Text('Are you sure you want to delete Order ${index + 1}?',
+            style: TextStyle(color: textColor)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -576,7 +608,7 @@ class _MultiOrderCheckoutScreenState
 
       if (!mounted) return;
 
-      // Show success and navigate back
+      // Show success and navigate back to dashboard
       final isDark = Theme.of(context).brightness == Brightness.dark;
       final cardColor = isDark ? const Color(0xFF2C2C2C) : Colors.white;
       final textColor = isDark ? Colors.white : Colors.black;
@@ -589,16 +621,17 @@ class _MultiOrderCheckoutScreenState
           title: Text('Order Placed! 🎉', style: TextStyle(color: textColor)),
           content: Text(
             'Your ${widget.orders.length} order${widget.orders.length > 1 ? 's have' : ' has'} been placed successfully.\n\n'
-                'The restaurant will confirm shortly.',
+            'The restaurant will confirm shortly.',
             style: TextStyle(color: textColor),
           ),
           actions: [
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Close checkout
-                Navigator.pop(context); // Close multi-order flow
-                Navigator.pop(context); // Back to dashboard
+                // Pop until we're back at the customer dashboard
+                // This safely pops: dialog -> checkout -> multi-order flow
+                Navigator.of(context).pushNamed(
+                  '/customerDashboard',
+                );
               },
               child: const Text('OK'),
             ),
@@ -624,39 +657,43 @@ class _MultiOrderCheckoutScreenState
 
 // Delivery locations
 class DeliveryLocations {
-  static const List<String> allLocations = [
-    'Main Gate',
-    'Block A',
-    'Block B',
-    'Block C',
-    'Block D',
-    'Block E',
-    'Block F',
-    'Block G',
-    'Engineering Block',
-    'Medical Block',
-    'Science Block',
-    'Arts Block',
-    'Library',
-    'Sports Complex',
-    'Male Hostel 1',
-    'Male Hostel 2',
-    'Female Hostel 1',
-    'Female Hostel 2',
-    'Postgraduate Hostel',
-    'Staff Quarters',
-    'Admin Block',
-    'Student Union',
-    'Cafeteria',
-    'Health Center',
-    'Chapel',
-    'Mosque',
-    'Car Park A',
-    'Car Park B',
-    'Stadium',
-    'Lecture Theatre 1',
-    'Lecture Theatre 2',
-    'Lab Complex',
-    'Workshop',
+  static const List<String> hostels = [
+    'Main Hostel (Boys)',
+    'Main Hostel (Girls)',
+    'Extension (Boys)',
+    'Extension (Girls)',
+    'Engineering Hostel (Boys)',
+    'Engineering Hostel (Girls)',
   ];
+
+  static const List<String> lectureAreas = [
+    'Lecture Area (NLT)',
+    'Lecture Area (MLT)',
+    'Lecture Area (LR 1)',
+    'Lecture Area (LR 2)',
+    'Lecture Area (LR 3)',
+    'Lecture Area (LR 4)',
+    'Lecture Area (LR 5)',
+    'Lecture Area (LR 6)',
+    'Lecture Area (LR 7)',
+    'Lecture Area (LR 8)',
+    'Lecture Area (LR 9)',
+    'Lecture Area (LR 10)',
+    'Lecture Area (LR 11)',
+    'Lecture Area (LR 12)',
+    'Lecture Area (LR 13)',
+    'Lecture Area (LR 14)',
+    'Lecture Area (LR 15)',
+    'Lecture Area (LR 16)',
+    'Lecture Area (LR 17)',
+    'Lecture Area (LR 18)',
+    'Lecture Area (LR 19)',
+    'Lecture Area (LR 20)',
+    'Lecture Area (LR 21)',
+    'Lecture Area (LR 22)',
+    'Lecture Area (LR 23)',
+    'Lecture Area (LR 24)',
+  ];
+
+  static List<String> get allLocations => [...hostels, ...lectureAreas];
 }

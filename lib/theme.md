@@ -86,7 +86,7 @@ Divider(color: isDark ? Colors.grey[700] : null)
 ## Screens to Update
 
 ### Customer Screens
-- [x] multi_order_checkout_screen.dart
+- [ ] multi_order_checkout_screen.dart
 - [x] multi_order_flow_screen.dart
 - [x] customer_dashboard.dart
 - [x] cart_screen.dart (partial)
@@ -96,13 +96,13 @@ Divider(color: isDark ? Colors.grey[700] : null)
 - [x] restaurant_dashboard.dart
 - [x] menu_management_screen.dart
 - [x] restaurant_orders_screen.dart
-- [ ] restaurant_settings_screen.dart
+- [x] restaurant_settings_screen.dart
 
 ### Delivery Screens
-- [ ] delivery_partner_dashboard.dart
-- [ ] available_deliveries_screen.dart
-- [ ] my_deliveries_screen.dart
-- [ ] delivery_earnings_screen.dart
+- [x] delivery_partner_dashboard.dart
+- [x] available_deliveries_screen.dart
+- [x] my_deliveries_screen.dart
+- [x] delivery_earnings_screen.dart
 
 ### Admin Screens
 - [ ] admin_dashboard.dart

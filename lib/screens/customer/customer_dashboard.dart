@@ -1,13 +1,14 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:r_foods/providers/restaurant_provider.dart';
 import 'package:r_foods/providers/cart_provider.dart';
 import 'package:r_foods/models/user_model.dart';
-// import 'package:r_foods/models/menu_item_model.dart';
 import 'package:r_foods/screens/customer/multi_order_flow_screen.dart';
 import 'package:r_foods/screens/customer/cart_screen.dart';
 import 'package:r_foods/screens/customer/my_orders_screen.dart';
+import 'package:r_foods/screens/drawer.dart';
 
 class CustomerDashboard extends ConsumerWidget {
   const CustomerDashboard({super.key});
@@ -16,15 +17,14 @@ class CustomerDashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final restaurantsAsync = ref.watch(restaurantsProvider);
     final cartItemCount = ref.watch(cartTotalItemsProvider);
-    
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
     final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text('R-Foods', style: TextStyle(color: textColor)),
+        title: Text('R-Foods', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
         actions: [
           // Cart icon with badge
           Stack(
@@ -64,24 +64,10 @@ class CustomerDashboard extends ConsumerWidget {
                 ),
             ],
           ),
-          IconButton(
-            icon: Icon(Icons.receipt_long, color: textColor),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const MyOrdersScreen()),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.logout, color: textColor),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
-            },
-          ),
+          const SizedBox(width: 8),
         ],
       ),
+      drawer: buildDrawer(context, isDark, textColor, 'customer'),
       body: SafeArea(
         child: restaurantsAsync.when(
           data: (restaurants) {
@@ -103,8 +89,25 @@ class CustomerDashboard extends ConsumerWidget {
 
             return LayoutBuilder(
               builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 900;
-                final crossAxisCount = isWide ? 3 : constraints.maxWidth > 600 ? 2 : 1;
+                // Highly responsive column calculation
+                int crossAxisCount = 1;
+                if (constraints.maxWidth > 1400) {
+                  crossAxisCount = 5;
+                } else if (constraints.maxWidth > 1100) {
+                  crossAxisCount = 4;
+                } else if (constraints.maxWidth > 800) {
+                  crossAxisCount = 3;
+                } else if (constraints.maxWidth > 550) {
+                  crossAxisCount = 2;
+                }
+
+                // Adjust aspect ratio based on width to prevent stretching
+                double aspectRatio = 1.1;
+                if (constraints.maxWidth > 1100) {
+                  aspectRatio = 1.0;
+                } else if (constraints.maxWidth < 400) {
+                  aspectRatio = 1.2;
+                }
 
                 return Padding(
                   padding: const EdgeInsets.all(16),
@@ -114,7 +117,7 @@ class CustomerDashboard extends ConsumerWidget {
                       Text(
                         'Available Restaurants',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: constraints.maxWidth > 600 ? 28 : 22,
                           fontWeight: FontWeight.bold,
                           color: textColor,
                         ),
@@ -124,7 +127,7 @@ class CustomerDashboard extends ConsumerWidget {
                         child: GridView.builder(
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxisCount,
-                            childAspectRatio: 1.3,
+                            childAspectRatio: aspectRatio,
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
                           ),
@@ -149,6 +152,7 @@ class CustomerDashboard extends ConsumerWidget {
       ),
     );
   }
+
 }
 
 class _RestaurantCard extends StatelessWidget {
@@ -164,146 +168,175 @@ class _RestaurantCard extends StatelessWidget {
     final textColor = isDark ? Colors.white : Colors.black;
     final subtextColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
-    return Card(
-      color: cardColor,
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: isOpen
-            ? () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MultiOrderFlowScreen(
-              restaurantId: restaurant.uid,
-              restaurantName: restaurant.restaurantName ?? 'Restaurant',
-            ),
-          ),
-        )
-            : null,
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Restaurant icon
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.restaurant,
-                      size: 40,
-                      color: Colors.orange,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth;
+        final isSmallCard = cardWidth < 200;
 
-                  // Restaurant name
-                  Text(
-                    restaurant.restaurantName ?? 'Restaurant',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Location
-                  if (restaurant.location != null) ...[
-                    Row(
-                      children: [
-                        Icon(Icons.location_on, size: 16, color: subtextColor),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            restaurant.location!,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: subtextColor,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+        return Card(
+          color: cardColor,
+          elevation: 4,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: InkWell(
+            onTap: isOpen
+                ? () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MultiOrderFlowScreen(
+                          restaurantId: restaurant.uid,
+                          restaurantName: restaurant.restaurantName ?? 'Restaurant',
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-
-                  // Operating hours
-                  if (restaurant.operatingHours != null) ...[
-                    Row(
-                      children: [
-                        Icon(Icons.access_time, size: 16, color: subtextColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${restaurant.operatingHours!['openTime']} - ${restaurant.operatingHours!['closeTime']}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: subtextColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            // Open/Closed badge
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isOpen ? Colors.green : Colors.red,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                      ),
+                    )
+                : null,
+            child: Stack(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(
-                      isOpen ? Icons.check_circle : Icons.cancel,
-                      size: 14,
-                      color: Colors.white,
+                    // Top part: Logo/Image
+                    Expanded(
+                      flex: 3,
+                      child: restaurant.restaurantLogoUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: restaurant.restaurantLogoUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(
+                                color: Colors.grey[200],
+                                child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.restaurant, color: Colors.orange),
+                              ),
+                            )
+                          : Container(
+                              color: Colors.orange.withOpacity(0.1),
+                              child: Icon(
+                                Icons.restaurant,
+                                size: isSmallCard ? 30 : 50,
+                                color: Colors.orange,
+                              ),
+                            ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      isOpen ? 'Open' : 'Closed',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                    // Bottom part: Info
+                    Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isSmallCard ? 8 : 12,
+                          vertical: isSmallCard ? 4 : 8,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              restaurant.restaurantName ?? 'Restaurant',
+                              style: TextStyle(
+                                fontSize: isSmallCard ? 14 : 18,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            if (restaurant.location != null)
+                              Row(
+                                children: [
+                                  Icon(Icons.location_on, size: isSmallCard ? 12 : 14, color: subtextColor),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      restaurant.location!,
+                                      style: TextStyle(
+                                        fontSize: isSmallCard ? 10 : 12,
+                                        color: subtextColor,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            if (restaurant.operatingHours != null && !isSmallCard) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.access_time, size: 14, color: subtextColor),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${restaurant.operatingHours!['openTime']} - ${restaurant.operatingHours!['closeTime']}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: subtextColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ),
 
-            // Closed overlay
-            if (!isOpen)
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.black.withOpacity(0.5) : Colors.grey.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(16),
+                // Open/Closed badge
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isOpen ? Colors.green : Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4)
+                      ],
+                    ),
+                    child: Text(
+                      isOpen ? 'Open' : 'Closed',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-          ],
-        ),
-      ),
+
+                // Closed overlay
+                if (!isOpen)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.black.withOpacity(0.5)
+                            : Colors.grey.withOpacity(0.3),
+                      ),
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'CLOSED',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -210,7 +210,7 @@ class _AvailableDeliveryCard extends ConsumerWidget {
               order.customerName,
               isCompact,
               textColor,
-              subtextColor,
+              subtextColor!,
             ),
             const SizedBox(height: 8),
             _buildInfoRow(

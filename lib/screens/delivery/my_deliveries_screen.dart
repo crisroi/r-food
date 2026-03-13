@@ -280,7 +280,7 @@ class _DeliveryCard extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
-              _detailRow('Restaurant', order.restaurantName, subtextColor, textColor),
+              _detailRow('Restaurant', order.restaurantName, subtextColor!, textColor),
               _detailRow('Customer', order.customerName, subtextColor, textColor),
               _detailRow('Phone', order.customerPhone, subtextColor, textColor),
               _detailRow('Location', order.deliveryLocation ?? '—', subtextColor, textColor),
